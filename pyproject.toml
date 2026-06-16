@@ -33,6 +33,7 @@ dev = [
   "seaborn",
   "missingno",
   "plotly",
+  "kagglehub",
   "nbformat>=4.2.0",
   "ipykernel>=7.2.0",
 ]
