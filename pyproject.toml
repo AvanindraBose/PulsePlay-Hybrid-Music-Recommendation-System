@@ -13,6 +13,8 @@ dependencies = [
   "plotly",
   "nbformat>=4.2.0",
   "ipykernel>=7.2.0",
+  "scikit-learn",
+  "category_encoders"
 ]
 
 # OPTIONAL GROUPS FOR TRAINING / PIPELINES
