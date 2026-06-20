@@ -7,10 +7,10 @@ stages:
     outs:
     - data/cleaned/songs-info-cleaned.csv
   content-filtering:
-    cmd: py -m src.content-based-filtering.content-filtering
+    cmd: py -m src.content_based_filtering.content_filtering
     deps:
     - data/cleaned/songs-info-cleaned.csv
-    - src/content-based-filtering/content-filtering.py
+    - src/content_based_filtering/content_filtering.py
     outs:
     - data/processed/transformed_content_filtering.npz
     - models/transformers.joblib
