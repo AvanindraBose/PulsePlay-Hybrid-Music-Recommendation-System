@@ -304,7 +304,7 @@ def content_recommendation(
 
         output_cols = [
             col
-            for col in ["name", "artist", "spotify_preview_url", "pulse_play_preview_url"]
+            for col in ["name", "artist", "pulse_play_preview_url"]
             if col in songs_data.columns
         ]
         recommendations = songs_data.iloc[top_indexes][output_cols].reset_index(drop=True)
