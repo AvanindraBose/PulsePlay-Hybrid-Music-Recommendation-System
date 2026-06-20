@@ -6,3 +6,11 @@ stages:
     - src/data/data_cleaning.py
     outs:
     - data/cleaned/songs-info-cleaned.csv
+  content-filtering:
+    cmd: py -m src.content-based-filtering.content-filtering
+    deps:
+    - data/cleaned/songs-info-cleaned.csv
+    - src/content-based-filtering/content-filtering.py
+    outs:
+    - data/processed/transformed_content_filtering.npz
+    - models/transformers.joblib

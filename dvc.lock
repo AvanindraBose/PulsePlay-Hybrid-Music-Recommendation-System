@@ -16,3 +16,23 @@ stages:
       hash: md5
       md5: f0760d63fc52a112321c8bfcaf918f20
       size: 6511888
+  content-filtering:
+    cmd: py -m src.content-based-filtering.content-filtering
+    deps:
+    - path: data/cleaned/songs-info-cleaned.csv
+      hash: md5
+      md5: f0760d63fc52a112321c8bfcaf918f20
+      size: 6511888
+    - path: src/content-based-filtering/content-filtering.py
+      hash: md5
+      md5: 10323a39b8d373ff1bb805bf34a21367
+      size: 12076
+    outs:
+    - path: data/processed/transformed_content_filtering.npz
+      hash: md5
+      md5: b3526e2f5d74e162a0d1bae5b6ad6cb0
+      size: 4518736
+    - path: models/transformers.joblib
+      hash: md5
+      md5: d44e764bf3730bfc227429d605c5b6d7
+      size: 141661
