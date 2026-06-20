@@ -1,0 +1,8 @@
+stages:
+  data-cleaning:
+    cmd: py -m src.data.data_cleaning
+    deps:
+    - data/raw/songs-info.csv
+    - src/data/data_cleaning.py
+    outs:
+    - data/cleaned/songs-info-cleaned.csv

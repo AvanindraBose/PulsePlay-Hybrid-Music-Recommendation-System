@@ -1,0 +1,4 @@
+[core]
+    site_cache_dir = .dvc/tmp/site-cache
+[cache]
+    dir = C:/dvc-cache-pulse
