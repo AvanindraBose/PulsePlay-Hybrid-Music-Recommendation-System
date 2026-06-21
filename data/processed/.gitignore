@@ -1,2 +1,5 @@
 /transformed_data.npz
 /transformed_content_filtering.npz
+/collab_filtered.csv
+/track_ids.npy
+/interaction_matrix.npz

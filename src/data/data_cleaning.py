@@ -50,8 +50,6 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
         df["tags"] = df["tags"].str.lower()
         cleaning_logger.save_logs("Converted name, artist, tags to lowercase", log_level="info")
         
-        df = data_for_content_filtering(df)
-
         df = df.reset_index(drop=True)
 
         cleaning_logger.save_logs(
@@ -171,12 +169,16 @@ def main():
         data_path = root_path / "data" / "raw" / "songs-info.csv"
         output_path = root_path / "data" / "cleaned"
         cleaned_file_name = "songs-info-cleaned.csv"
+        cleaned_collab_file_name = "songs-info-collab.csv"
 
         output_path.mkdir(exist_ok=True)
 
         data = load_data(data_path)
         cleaned_data = clean_data(data)
-        save_data(cleaned_data, output_path / cleaned_file_name)
+        collab_data = cleaned_data.copy()
+        content_cleaned_data = data_for_content_filtering(cleaned_data)
+        save_data(content_cleaned_data, output_path / cleaned_file_name)
+        save_data(collab_data,output_path / cleaned_collab_file_name)
 
     except Exception as e:
         cleaning_logger.save_logs(

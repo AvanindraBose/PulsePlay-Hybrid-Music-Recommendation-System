@@ -9,24 +9,28 @@ stages:
       size: 15036557
     - path: src/data/data_cleaning.py
       hash: md5
-      md5: 0e1a2180129cc6a2708085ae3a70bcad
-      size: 5940
+      md5: 50d5cd8188e8674d1f32d500d4ddf272
+      size: 6148
     outs:
     - path: data/cleaned/songs-info-cleaned.csv
       hash: md5
       md5: f0760d63fc52a112321c8bfcaf918f20
       size: 6511888
+    - path: data/cleaned/songs-info-collab.csv
+      hash: md5
+      md5: 4166517f699c4080dc60b607a802e7e9
+      size: 13712185
   content-filtering:
-    cmd: py -m src.content-based-filtering.content-filtering
+    cmd: py -m src.content_based_filtering.content_filtering
     deps:
     - path: data/cleaned/songs-info-cleaned.csv
       hash: md5
       md5: f0760d63fc52a112321c8bfcaf918f20
       size: 6511888
-    - path: src/content-based-filtering/content-filtering.py
+    - path: src/content_based_filtering/content_filtering.py
       hash: md5
-      md5: 10323a39b8d373ff1bb805bf34a21367
-      size: 12076
+      md5: 2ec3a8a335481bf86b9e563968ad74e2
+      size: 12051
     outs:
     - path: data/processed/transformed_content_filtering.npz
       hash: md5
@@ -34,5 +38,33 @@ stages:
       size: 4518736
     - path: models/transformers.joblib
       hash: md5
-      md5: d44e764bf3730bfc227429d605c5b6d7
+      md5: d5dc5c4a1fa253b4ffeaa4395820211d
       size: 141661
+  collaborative-filtering:
+    cmd: py -m src.collaborative_filtering.collaborative_recommendation
+    deps:
+    - path: data/cleaned/songs-info-collab.csv
+      hash: md5
+      md5: 4166517f699c4080dc60b607a802e7e9
+      size: 13712185
+    - path: data/raw/user-info.csv
+      hash: md5
+      md5: 2a055e408d5bcbceaaaafb8f82e949a8
+      size: 612226872
+    - path: src/collaborative_filtering/collaborative_recommendation.py
+      hash: md5
+      md5: 7deec0067eac7b481c9ff5dc6917ce7e
+      size: 14251
+    outs:
+    - path: data/processed/collab_filtered.csv
+      hash: md5
+      md5: 43f298f3b2633056cead7296b80708c0
+      size: 8260463
+    - path: data/processed/interaction_matrix.npz
+      hash: md5
+      md5: 53f8fa1e7cec19856a6b2bc60ce8881f
+      size: 32311353
+    - path: data/processed/track_ids.npy
+      hash: md5
+      md5: 4a52e4cb6bae6b0126c1344dac7c7686
+      size: 640058

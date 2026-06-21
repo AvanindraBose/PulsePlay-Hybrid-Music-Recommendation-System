@@ -6,6 +6,7 @@ stages:
     - src/data/data_cleaning.py
     outs:
     - data/cleaned/songs-info-cleaned.csv
+    - data/cleaned/songs-info-collab.csv
   content-filtering:
     cmd: py -m src.content_based_filtering.content_filtering
     deps:
@@ -14,3 +15,13 @@ stages:
     outs:
     - data/processed/transformed_content_filtering.npz
     - models/transformers.joblib
+  collaborative-filtering:
+    cmd: py -m src.collaborative_filtering.collaborative_recommendation
+    deps:
+    - data/raw/user-info.csv
+    - data/cleaned/songs-info-collab.csv
+    - src/collaborative_filtering/collaborative_recommendation.py
+    outs:
+    - data/processed/collab_filtered.csv
+    - data/processed/track_ids.npy
+    - data/processed/interaction_matrix.npz
