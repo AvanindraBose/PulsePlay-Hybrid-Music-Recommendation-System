@@ -1,18 +1,16 @@
 import logging
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Union
-
 import joblib
 import numpy as np
 import pandas as pd
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Union
 from category_encoders.count import CountEncoder
 from scipy.sparse import csr_matrix, issparse, save_npz, spmatrix
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
-
 from src.utils.logger import CustomLogger, create_log_path
 
 log_file_path = create_log_path("Content-Filtering-Logs")
