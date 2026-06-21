@@ -1,16 +1,23 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 from scipy.sparse import load_npz
 
 from src.content_based_filtering.content_filtering import content_recommendation
+from src.collaborative_filtering.collaborative_recommendation import (
+    collaborative_recommendation,
+)
 
 ROOT_PATH = Path(__file__).parent
 RAW_DATA_PATH = ROOT_PATH / "data" / "raw" / "songs-info.csv"
 TRANSFORMED_DATA_PATH = (
     ROOT_PATH / "data" / "processed" / "transformed_content_filtering.npz"
 )
+COLLAB_FILTERED_DATA_PATH = ROOT_PATH / "data" / "processed" / "collab_filtered.csv"
+TRACK_IDS_PATH = ROOT_PATH / "data" / "processed" / "track_ids.npy"
+INTERACTION_MATRIX_PATH = ROOT_PATH / "data" / "processed" / "interaction_matrix.npz"
 
 
 @st.cache_data
@@ -23,6 +30,24 @@ def load_song_metadata(data_path: Path) -> pd.DataFrame:
 
     Returns:
     pd.DataFrame: Song metadata aligned with the transformed feature matrix.
+    """
+    data = pd.read_csv(data_path)
+    data = data.drop_duplicates(subset="track_id").reset_index(drop=True)
+    data["name"] = data["name"].str.lower()
+    data["artist"] = data["artist"].str.lower()
+    return data
+
+
+@st.cache_data
+def load_collab_song_metadata(data_path: Path) -> pd.DataFrame:
+    """
+    Loads song metadata aligned with the collaborative filtering artifacts.
+
+    Parameters:
+    data_path (Path): Path to the collaborative filtered songs CSV file.
+
+    Returns:
+    pd.DataFrame: Filtered song metadata aligned with interaction matrix track IDs.
     """
     data = pd.read_csv(data_path)
     data = data.drop_duplicates(subset="track_id").reset_index(drop=True)
@@ -45,6 +70,34 @@ def load_transformed_data(data_path: Path):
     return load_npz(data_path)
 
 
+@st.cache_data
+def load_track_ids(data_path: Path):
+    """
+    Loads track IDs aligned with the collaborative interaction matrix rows.
+
+    Parameters:
+    data_path (Path): Path to the saved NPY track IDs file.
+
+    Returns:
+    np.ndarray: Track IDs in interaction matrix row order.
+    """
+    return np.load(data_path, allow_pickle=True)
+
+
+@st.cache_resource
+def load_interaction_matrix(data_path: Path):
+    """
+    Loads the collaborative filtering interaction matrix.
+
+    Parameters:
+    data_path (Path): Path to the saved sparse NPZ interaction matrix.
+
+    Returns:
+    scipy.sparse.spmatrix: Track-user interaction matrix.
+    """
+    return load_npz(data_path)
+
+
 def format_label(row: pd.Series) -> str:
     """
     Formats a song row for display in Streamlit selection widgets.
@@ -60,7 +113,7 @@ def format_label(row: pd.Series) -> str:
 
 def main() -> None:
     """
-    Runs the Streamlit content-based music recommender app.
+    Runs the Streamlit hybrid music recommender app.
 
     Returns:
     None
@@ -77,7 +130,15 @@ def main() -> None:
         st.error(f"Raw songs file not found: {RAW_DATA_PATH}")
         st.stop()
 
-    if not TRANSFORMED_DATA_PATH.exists():
+    filtering_type = st.selectbox(
+        "Recommendation type",
+        options=["Content-Based Filtering", "Collaborative Filtering"],
+    )
+
+    if (
+        filtering_type == "Content-Based Filtering"
+        and not TRANSFORMED_DATA_PATH.exists()
+    ):
         st.error(
             "Transformed feature file not found. Run the content filtering pipeline first."
         )
@@ -87,15 +148,43 @@ def main() -> None:
         )
         st.stop()
 
-    songs_data = load_song_metadata(RAW_DATA_PATH)
-    transformed_data = load_transformed_data(TRANSFORMED_DATA_PATH)
-
-    if len(songs_data) != transformed_data.shape[0]:
+    collab_paths = [
+        COLLAB_FILTERED_DATA_PATH,
+        TRACK_IDS_PATH,
+        INTERACTION_MATRIX_PATH,
+    ]
+    missing_collab_paths = [path for path in collab_paths if not path.exists()]
+    if filtering_type == "Collaborative Filtering" and missing_collab_paths:
         st.error(
-            "Song metadata and transformed feature matrix are not aligned. "
-            "Re-run the data cleaning and content filtering pipelines."
+            "Collaborative filtering files were not found. "
+            "Run the collaborative filtering pipeline first."
         )
+        for path in missing_collab_paths:
+            st.code(str(path))
         st.stop()
+
+    if filtering_type == "Content-Based Filtering":
+        songs_data = load_song_metadata(RAW_DATA_PATH)
+        transformed_data = load_transformed_data(TRANSFORMED_DATA_PATH)
+
+        if len(songs_data) != transformed_data.shape[0]:
+            st.error(
+                "Song metadata and transformed feature matrix are not aligned. "
+                "Re-run the data cleaning and content filtering pipelines."
+            )
+            st.stop()
+
+    else:
+        songs_data = load_collab_song_metadata(COLLAB_FILTERED_DATA_PATH)
+        track_ids = load_track_ids(TRACK_IDS_PATH)
+        interaction_matrix = load_interaction_matrix(INTERACTION_MATRIX_PATH)
+
+        if interaction_matrix.shape[0] != len(track_ids):
+            st.error(
+                "Track IDs and interaction matrix are not aligned. "
+                "Re-run the collaborative filtering pipeline."
+            )
+            st.stop()
 
     song_options = songs_data[["name", "artist"]].drop_duplicates().sort_values(
         by=["name", "artist"]
@@ -115,13 +204,24 @@ def main() -> None:
 
     if st.button("Get Recommendations", type="primary"):
         try:
-            recommendations = content_recommendation(
-                song_name=selected_song["name"],
-                artist_name=selected_song["artist"],
-                songs_data=songs_data,
-                transformed_data=transformed_data,
-                k=k,
-            )
+            if filtering_type == "Content-Based Filtering":
+                recommendations = content_recommendation(
+                    song_name=selected_song["name"],
+                    artist_name=selected_song["artist"],
+                    songs_data=songs_data,
+                    transformed_data=transformed_data,
+                    k=k,
+                )
+
+            else:
+                recommendations = collaborative_recommendation(
+                    song_name=selected_song["name"],
+                    artist_name=selected_song["artist"],
+                    track_ids=track_ids,
+                    songs_data=songs_data,
+                    interaction_matrix=interaction_matrix,
+                    k=k,
+                )
 
         except ValueError as e:
             st.warning(str(e))
@@ -131,7 +231,8 @@ def main() -> None:
 
         else:
             st.subheader(
-                f"Similar to {selected_song['name'].title()} by {selected_song['artist'].title()}"
+                f"{filtering_type} recommendations for "
+                f"{selected_song['name'].title()} by {selected_song['artist'].title()}"
             )
 
             for index, recommendation in recommendations.iterrows():
