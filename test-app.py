@@ -11,7 +11,7 @@ from src.collaborative_filtering.collaborative_recommendation import (
 )
 
 ROOT_PATH = Path(__file__).parent
-RAW_DATA_PATH = ROOT_PATH / "data" / "raw" / "songs-info.csv"
+RAW_DATA_PATH = ROOT_PATH / "data" / "cleaned" / "songs-info-collab.csv"
 TRANSFORMED_DATA_PATH = (
     ROOT_PATH / "data" / "processed" / "transformed_content_filtering.npz"
 )
@@ -32,9 +32,6 @@ def load_song_metadata(data_path: Path) -> pd.DataFrame:
     pd.DataFrame: Song metadata aligned with the transformed feature matrix.
     """
     data = pd.read_csv(data_path)
-    data = data.drop_duplicates(subset="track_id").reset_index(drop=True)
-    data["name"] = data["name"].str.lower()
-    data["artist"] = data["artist"].str.lower()
     return data
 
 
@@ -236,12 +233,29 @@ def main() -> None:
             )
 
             for index, recommendation in recommendations.iterrows():
+
                 song_name = recommendation["name"].title()
                 artist_name = recommendation["artist"].title()
 
-                st.markdown(f"**{index + 1}. {song_name}** by **{artist_name}**")
+                # Header
+                if index == 0:
+                    st.markdown("## Currently Playing")
+                    st.markdown(f"#### **{song_name}** by **{artist_name}**")
 
+                elif index == 1:
+                    st.markdown("### Next Up 🎵")
+                    st.markdown(f"#### {index}. **{song_name}** by **{artist_name}**")
+
+                else:
+                    st.markdown(f"#### {index}. **{song_name}** by **{artist_name}**")
+
+                # Preview URL
                 preview_url = recommendation.get("pulse_play_preview_url")
+
+                # Fall back to spotify preview if pulse play preview is unavailable
+                if pd.isna(preview_url) or not preview_url:
+                    preview_url = recommendation.get("spotify_preview_url")
+
                 if pd.notna(preview_url) and preview_url:
                     st.audio(preview_url)
                 else:

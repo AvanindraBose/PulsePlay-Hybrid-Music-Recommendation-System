@@ -9,10 +9,10 @@ stages:
       size: 15036557
     - path: src/data/data_cleaning.py
       hash: md5
-      md5: 50d5cd8188e8674d1f32d500d4ddf272
-      size: 6148
+      md5: 4a293ef0249afa5fa939ded9aa27e6c6
+      size: 6156
     outs:
-    - path: data/cleaned/songs-info-cleaned.csv
+    - path: data/cleaned/songs-info-cleaned-content.csv
       hash: md5
       md5: f0760d63fc52a112321c8bfcaf918f20
       size: 6511888
@@ -23,14 +23,14 @@ stages:
   content-filtering:
     cmd: py -m src.content_based_filtering.content_filtering
     deps:
-    - path: data/cleaned/songs-info-cleaned.csv
+    - path: data/cleaned/songs-info-cleaned-content.csv
       hash: md5
       md5: f0760d63fc52a112321c8bfcaf918f20
       size: 6511888
     - path: src/content_based_filtering/content_filtering.py
       hash: md5
-      md5: 2ec3a8a335481bf86b9e563968ad74e2
-      size: 12051
+      md5: ea8872ba92a8812de20a29c6303404dd
+      size: 12059
     outs:
     - path: data/processed/transformed_content_filtering.npz
       hash: md5

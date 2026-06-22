@@ -232,9 +232,6 @@ def collaborative_recommendation(
         similarity_scores = cosine_similarity(input_array, interaction_matrix)
 
         recommendation_indices = np.argsort(similarity_scores.ravel())[-k - 1 :][::-1]
-        recommendation_indices = [
-            index for index in recommendation_indices if index != song_index
-        ][:k]
 
         recommendation_track_ids = track_ids[recommendation_indices]
         top_scores = similarity_scores.ravel()[recommendation_indices]

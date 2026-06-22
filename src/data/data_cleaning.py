@@ -168,7 +168,7 @@ def main():
         root_path = Path(__file__).parent.parent.parent
         data_path = root_path / "data" / "raw" / "songs-info.csv"
         output_path = root_path / "data" / "cleaned"
-        cleaned_file_name = "songs-info-cleaned.csv"
+        cleaned_file_name = "songs-info-cleaned-content.csv"
         cleaned_collab_file_name = "songs-info-collab.csv"
 
         output_path.mkdir(exist_ok=True)

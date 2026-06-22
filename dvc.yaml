@@ -5,12 +5,12 @@ stages:
     - data/raw/songs-info.csv
     - src/data/data_cleaning.py
     outs:
-    - data/cleaned/songs-info-cleaned.csv
+    - data/cleaned/songs-info-cleaned-content.csv
     - data/cleaned/songs-info-collab.csv
   content-filtering:
     cmd: py -m src.content_based_filtering.content_filtering
     deps:
-    - data/cleaned/songs-info-cleaned.csv
+    - data/cleaned/songs-info-cleaned-content.csv
     - src/content_based_filtering/content_filtering.py
     outs:
     - data/processed/transformed_content_filtering.npz

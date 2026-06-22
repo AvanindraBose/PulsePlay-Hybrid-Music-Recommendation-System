@@ -298,7 +298,6 @@ def content_recommendation(
         similarity_scores = calculate_similarity_scores(input_vector, transformed_data)
 
         top_indexes = np.argsort(similarity_scores.ravel())[-k - 1 :][::-1]
-        top_indexes = [index for index in top_indexes if index != song_index][:k]
 
         output_cols = [
             col
@@ -375,7 +374,7 @@ def main() -> None:
         )
 
         root_path = Path(__file__).parent.parent.parent
-        data_path = root_path / "data" / "cleaned" / "songs-info-cleaned.csv"
+        data_path = root_path / "data" / "cleaned" / "songs-info-cleaned-content.csv"
         transformed_data_path = root_path / "data" / "processed"
         transformed_data_name = "transformed_content_filtering.npz"
         transformer_path = root_path / "models"
