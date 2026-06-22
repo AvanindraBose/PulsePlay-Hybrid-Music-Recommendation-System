@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 from scipy.sparse import load_npz
 
+from Script.hybrid_recommendation import HybridRecommenderSystem
 from src.content_based_filtering.content_filtering import content_recommendation
 from src.collaborative_filtering.collaborative_recommendation import (
     collaborative_recommendation,
@@ -18,6 +19,9 @@ TRANSFORMED_DATA_PATH = (
 COLLAB_FILTERED_DATA_PATH = ROOT_PATH / "data" / "processed" / "collab_filtered.csv"
 TRACK_IDS_PATH = ROOT_PATH / "data" / "processed" / "track_ids.npy"
 INTERACTION_MATRIX_PATH = ROOT_PATH / "data" / "processed" / "interaction_matrix.npz"
+HYBRID_TRANSFORMED_DATA_PATH = (
+    ROOT_PATH / "data" / "processed" / "transformed_hybrid_data.npz"
+)
 
 
 @st.cache_data
@@ -129,7 +133,11 @@ def main() -> None:
 
     filtering_type = st.selectbox(
         "Recommendation type",
-        options=["Content-Based Filtering", "Collaborative Filtering"],
+        options=[
+            "Content-Based Filtering",
+            "Collaborative Filtering",
+            "Hybrid Recommendation",
+        ],
     )
 
     if (
@@ -151,12 +159,29 @@ def main() -> None:
         INTERACTION_MATRIX_PATH,
     ]
     missing_collab_paths = [path for path in collab_paths if not path.exists()]
+    hybrid_paths = [
+        COLLAB_FILTERED_DATA_PATH,
+        TRACK_IDS_PATH,
+        INTERACTION_MATRIX_PATH,
+        HYBRID_TRANSFORMED_DATA_PATH,
+    ]
+    missing_hybrid_paths = [path for path in hybrid_paths if not path.exists()]
+
     if filtering_type == "Collaborative Filtering" and missing_collab_paths:
         st.error(
             "Collaborative filtering files were not found. "
             "Run the collaborative filtering pipeline first."
         )
         for path in missing_collab_paths:
+            st.code(str(path))
+        st.stop()
+
+    if filtering_type == "Hybrid Recommendation" and missing_hybrid_paths:
+        st.error(
+            "Hybrid recommendation files were not found. "
+            "Run the collaborative filtering and transform-filtered-data pipelines first."
+        )
+        for path in missing_hybrid_paths:
             st.code(str(path))
         st.stop()
 
@@ -171,10 +196,30 @@ def main() -> None:
             )
             st.stop()
 
-    else:
+    elif filtering_type == "Collaborative Filtering":
         songs_data = load_collab_song_metadata(COLLAB_FILTERED_DATA_PATH)
         track_ids = load_track_ids(TRACK_IDS_PATH)
         interaction_matrix = load_interaction_matrix(INTERACTION_MATRIX_PATH)
+
+        if interaction_matrix.shape[0] != len(track_ids):
+            st.error(
+                "Track IDs and interaction matrix are not aligned. "
+                "Re-run the collaborative filtering pipeline."
+            )
+            st.stop()
+
+    else:
+        songs_data = load_collab_song_metadata(COLLAB_FILTERED_DATA_PATH)
+        transformed_data = load_transformed_data(HYBRID_TRANSFORMED_DATA_PATH)
+        track_ids = load_track_ids(TRACK_IDS_PATH)
+        interaction_matrix = load_interaction_matrix(INTERACTION_MATRIX_PATH)
+
+        if len(songs_data) != transformed_data.shape[0]:
+            st.error(
+                "Filtered songs data and transformed hybrid matrix are not aligned. "
+                "Re-run the transform-filtered-data pipeline."
+            )
+            st.stop()
 
         if interaction_matrix.shape[0] != len(track_ids):
             st.error(
@@ -199,6 +244,16 @@ def main() -> None:
         index=1,
     )
 
+    content_weight = 0.5
+    if filtering_type == "Hybrid Recommendation":
+        content_weight = st.slider(
+            "Content-based weight",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            step=0.05,
+        )
+
     if st.button("Get Recommendations", type="primary"):
         try:
             if filtering_type == "Content-Based Filtering":
@@ -210,7 +265,7 @@ def main() -> None:
                     k=k,
                 )
 
-            else:
+            elif filtering_type == "Collaborative Filtering":
                 recommendations = collaborative_recommendation(
                     song_name=selected_song["name"],
                     artist_name=selected_song["artist"],
@@ -218,6 +273,20 @@ def main() -> None:
                     songs_data=songs_data,
                     interaction_matrix=interaction_matrix,
                     k=k,
+                )
+
+            else:
+                recommender = HybridRecommenderSystem(
+                    num_of_recommendations=k,
+                    weight_content_based=content_weight,
+                )
+                recommendations = recommender.give_recommendation(
+                    song_name=selected_song["name"],
+                    artist_name=selected_song["artist"],
+                    songs_data=songs_data,
+                    transformed_matrix=transformed_data,
+                    track_ids=track_ids,
+                    interaction_matrix=interaction_matrix,
                 )
 
         except ValueError as e:
