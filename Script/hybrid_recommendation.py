@@ -124,7 +124,7 @@ class HybridRecommenderSystem:
 
         return (similarity_scores - minimum) / (maximum - minimum)
 
-    def weighted_scores(
+    def _weighted_scores(
         self,
         content_based_scores: np.ndarray,
         collab_based_scores: np.ndarray,
@@ -181,51 +181,36 @@ class HybridRecommenderSystem:
             interaction_matrix=interaction_matrix,
         )
 
-        content_scores_df = pd.DataFrame(
-            {
-                "track_id": songs_data["track_id"].to_numpy(),
-                "content_score": self._normalize_similarities(
-                    content_based_similarities
-                ),
-            }
-        )
-        collab_scores_df = pd.DataFrame(
-            {
-                "track_id": track_ids,
-                "collab_score": self._normalize_similarities(
-                    collab_based_similarities
-                ),
-            }
-        )
-
-        scores_df = content_scores_df.merge(collab_scores_df, on="track_id", how="inner")
-        scores_df["score"] = self.weighted_scores(
-            content_based_scores=scores_df["content_score"],
-            collab_based_scores=scores_df["collab_score"],
-        )
-        scores_df = scores_df.loc[scores_df["track_id"] != input_track_id]
-        scores_df = scores_df.sort_values(by="score", ascending=False).head(
-            self.num_recomm
-        )
-
-        output_cols = [
-            col
-            for col in [
-                "track_id",
-                "name",
-                "artist",
-                "pulse_play_preview_url",
-                "spotify_preview_url",
-            ]
-            if col in songs_data.columns
-        ]
-
+         # normalize content based similarities
+        normalized_content_based_similarities = self._normalize_similarities(content_based_similarities)
+        
+        # normalize collaborative filtering similarities
+        normalized_collaborative_filtering_similarities = self._normalize_similarities(collab_based_similarities)
+        
+        # weighted combination of similarities
+        weighted_scores = self._weighted_scores(content_based_scores= normalized_content_based_similarities, 
+                                                    collab_based_scores= normalized_collaborative_filtering_similarities)
+        
+        
+        # index values of recommendations
+        recommendation_indices = np.argsort(weighted_scores.ravel())[-self.num_recomm -1:][::-1] 
+        
+        # get top k recommendations
+        recommendation_track_ids = track_ids[recommendation_indices]
+       
+        # get top scores
+        top_scores = np.sort(weighted_scores.ravel())[-self.num_recomm -1:][::-1]
+        
+        # get the songs from data and print
+        scores_df = pd.DataFrame({"track_id":recommendation_track_ids.tolist(),
+                                "score":top_scores})
         top_k_songs = (
-            songs_data[output_cols]
-            .merge(scores_df[["track_id", "score"]], on="track_id")
-            .sort_values(by="score", ascending=False)
-            .drop(columns=["track_id", "score"])
-            .reset_index(drop=True)
-        )
-
+                        songs_data
+                        .loc[songs_data["track_id"].isin(recommendation_track_ids)]
+                        .merge(scores_df,on="track_id")
+                        .sort_values(by="score",ascending=False)
+                        .drop(columns=["track_id","score"])
+                        .reset_index(drop=True)
+                        )
+        
         return top_k_songs
