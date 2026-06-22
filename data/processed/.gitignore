@@ -3,3 +3,4 @@
 /collab_filtered.csv
 /track_ids.npy
 /interaction_matrix.npz
+/transformed_hybrid_data.npz

@@ -68,3 +68,23 @@ stages:
       hash: md5
       md5: 4a52e4cb6bae6b0126c1344dac7c7686
       size: 640058
+  transform-filtered-data:
+    cmd: py -m src.transformation.transform_filtered_data
+    deps:
+    - path: data/processed/collab_filtered.csv
+      hash: md5
+      md5: 43f298f3b2633056cead7296b80708c0
+      size: 8260463
+    - path: models/transformers.joblib
+      hash: md5
+      md5: d5dc5c4a1fa253b4ffeaa4395820211d
+      size: 141661
+    - path: src/transformation/transform_filtered_data.py
+      hash: md5
+      md5: 6f8df932124d8e14370a4c2d220d664a
+      size: 1001
+    outs:
+    - path: data/processed/transformed_hybrid_data.npz
+      hash: md5
+      md5: cef9e7587da4cbefbf758a3b6684bd33
+      size: 2733489

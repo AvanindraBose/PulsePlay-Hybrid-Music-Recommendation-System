@@ -25,3 +25,11 @@ stages:
     - data/processed/collab_filtered.csv
     - data/processed/track_ids.npy
     - data/processed/interaction_matrix.npz
+  transform-filtered-data:
+    cmd: py -m src.transformation.transform_filtered_data
+    deps:
+    - data/processed/collab_filtered.csv
+    - models/transformers.joblib
+    - src/transformation/transform_filtered_data.py
+    outs:
+    - data/processed/transformed_hybrid_data.npz
