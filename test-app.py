@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
+from pathlib import Path
+from numpy import load
 import streamlit as st
 from scipy.sparse import load_npz
-
 from Script.hybrid_recommendation import HybridRecommenderSystem
 from src.content_based_filtering.content_filtering import content_recommendation
 from src.collaborative_filtering.collaborative_recommendation import (
@@ -12,326 +11,187 @@ from src.collaborative_filtering.collaborative_recommendation import (
 )
 
 ROOT_PATH = Path(__file__).parent
-RAW_DATA_PATH = ROOT_PATH / "data" / "cleaned" / "songs-info-collab.csv"
-TRANSFORMED_DATA_PATH = (
-    ROOT_PATH / "data" / "processed" / "transformed_content_filtering.npz"
-)
-COLLAB_FILTERED_DATA_PATH = ROOT_PATH / "data" / "processed" / "collab_filtered.csv"
-TRACK_IDS_PATH = ROOT_PATH / "data" / "processed" / "track_ids.npy"
-INTERACTION_MATRIX_PATH = ROOT_PATH / "data" / "processed" / "interaction_matrix.npz"
-HYBRID_TRANSFORMED_DATA_PATH = (
-    ROOT_PATH / "data" / "processed" / "transformed_hybrid_data.npz"
-)
+# RAW_DATA_PATH = ROOT_PATH / "data" / "cleaned" / "songs-info-collab.csv"
+# TRANSFORMED_DATA_PATH = (
+#     ROOT_PATH / "data" / "processed" / "transformed_content_filtering.npz"
+# )
+# COLLAB_FILTERED_DATA_PATH = ROOT_PATH / "data" / "processed" / "collab_filtered.csv"
+# TRACK_IDS_PATH = ROOT_PATH / "data" / "processed" / "track_ids.npy"
+# INTERACTION_MATRIX_PATH = ROOT_PATH / "data" / "processed" / "interaction_matrix.npz"
+# HYBRID_TRANSFORMED_DATA_PATH = (
+#     ROOT_PATH / "data" / "processed" / "transformed_hybrid_data.npz"
+# )
 
+# load the data
+cleaned_data_path = ROOT_PATH / "data" / "cleaned" / "songs-info-collab.csv"
+st.session_state.songs_data = pd.read_csv(cleaned_data_path)
 
-@st.cache_data
-def load_song_metadata(data_path: Path) -> pd.DataFrame:
-    """
-    Loads song metadata used by the Streamlit recommendation app.
+# load the transformed data
+transformed_data_path = ROOT_PATH / "data" / "processed" / "transformed_content_filtering.npz"
+st.session_state.transformed_data = load_npz(transformed_data_path)
 
-    Parameters:
-    data_path (Path): Path to the raw songs dataset.
+# load the track ids
+track_ids_path = ROOT_PATH / "data" / "processed" / "track_ids.npy"
+st.session_state.track_ids = load(track_ids_path,allow_pickle=True)
 
-    Returns:
-    pd.DataFrame: Song metadata aligned with the transformed feature matrix.
-    """
-    data = pd.read_csv(data_path)
-    return data
+# load the filtered songs data
+filtered_data_path = ROOT_PATH / "data" / "processed" / "collab_filtered.csv"
+st.session_state.filtered_data = pd.read_csv(filtered_data_path)
 
+# load the interaction matrix
+interaction_matrix_path = ROOT_PATH / "data" / "processed" / "interaction_matrix.npz"
+st.session_state.interaction_matrix = load_npz(interaction_matrix_path)
 
-@st.cache_data
-def load_collab_song_metadata(data_path: Path) -> pd.DataFrame:
-    """
-    Loads song metadata aligned with the collaborative filtering artifacts.
+# load the transformed hybrid data
+transformed_hybrid_data_path = ROOT_PATH / "data" / "processed" / "transformed_hybrid_data.npz"
+st.session_state.transformed_hybrid_data = load_npz(transformed_hybrid_data_path)
 
-    Parameters:
-    data_path (Path): Path to the collaborative filtered songs CSV file.
+# Title
+st.title('Welcome to the Pulse Play Song Recommender!')
 
-    Returns:
-    pd.DataFrame: Filtered song metadata aligned with interaction matrix track IDs.
-    """
-    data = pd.read_csv(data_path)
-    data = data.drop_duplicates(subset="track_id").reset_index(drop=True)
-    data["name"] = data["name"].str.lower()
-    data["artist"] = data["artist"].str.lower()
-    return data
+# Subheader
+st.write('### Enter the name of a song and the recommender will suggest similar songs 🎵🎧')
 
+# Text Input
+song_name = st.text_input('Enter a song name:')
+st.write('You entered:', song_name)
+# artist name
+artist_name = st.text_input('Enter the artist name:')
+st.write('You entered:', artist_name)
+# lowercase the input
+song_name = song_name.lower()
+artist_name = artist_name.lower()
 
-@st.cache_resource
-def load_transformed_data(data_path: Path):
-    """
-    Loads the transformed feature matrix used for similarity search.
+# k recommndations
+k = st.selectbox('How many recommendations do you want?', [5,10,15,20], index=1)
 
-    Parameters:
-    data_path (Path): Path to the saved sparse NPZ feature matrix.
+if ((st.session_state.filtered_data["name"] == song_name) & (st.session_state.filtered_data["artist"] == artist_name)).any():   
+    # type of filtering
+    filtering_type = st.selectbox(label= 'Select the type of filtering:', 
+                                options= ['Content-Based Filtering', 
+                                            'Collaborative Filtering',
+                                            "Hybrid Recommender System"],
+                                index= 2)
 
-    Returns:
-    scipy.sparse.spmatrix: Transformed song feature matrix.
-    """
-    return load_npz(data_path)
+    # diversity slider
+     # Default value
+    content_based_weight = 0.5
 
-
-@st.cache_data
-def load_track_ids(data_path: Path):
-    """
-    Loads track IDs aligned with the collaborative interaction matrix rows.
-
-    Parameters:
-    data_path (Path): Path to the saved NPY track IDs file.
-
-    Returns:
-    np.ndarray: Track IDs in interaction matrix row order.
-    """
-    return np.load(data_path, allow_pickle=True)
-
-
-@st.cache_resource
-def load_interaction_matrix(data_path: Path):
-    """
-    Loads the collaborative filtering interaction matrix.
-
-    Parameters:
-    data_path (Path): Path to the saved sparse NPZ interaction matrix.
-
-    Returns:
-    scipy.sparse.spmatrix: Track-user interaction matrix.
-    """
-    return load_npz(data_path)
-
-
-def format_label(row: pd.Series) -> str:
-    """
-    Formats a song row for display in Streamlit selection widgets.
-
-    Parameters:
-    row (pd.Series): Song metadata row containing name and artist.
-
-    Returns:
-    str: Human-readable song and artist label.
-    """
-    return f"{row['name'].title()} - {row['artist'].title()}"
-
-
-def main() -> None:
-    """
-    Runs the Streamlit hybrid music recommender app.
-
-    Returns:
-    None
-    """
-    st.set_page_config(
-        page_title="Pulse Play Song Recommender",
-        layout="centered",
-    )
-
-    st.title("Pulse Play Song Recommender")
-    st.write("Choose a song and get similar tracks based on audio and tag features.")
-
-    if not RAW_DATA_PATH.exists():
-        st.error(f"Raw songs file not found: {RAW_DATA_PATH}")
-        st.stop()
-
-    filtering_type = st.selectbox(
-        "Recommendation type",
-        options=[
-            "Content-Based Filtering",
-            "Collaborative Filtering",
-            "Hybrid Recommendation",
-        ],
-    )
-
-    if (
-        filtering_type == "Content-Based Filtering"
-        and not TRANSFORMED_DATA_PATH.exists()
-    ):
-        st.error(
-            "Transformed feature file not found. Run the content filtering pipeline first."
-        )
-        st.code(
-            ".\\.venv\\Scripts\\python.exe src\\content_based_filtering\\content_filtering.py",
-            language="powershell",
-        )
-        st.stop()
-
-    collab_paths = [
-        COLLAB_FILTERED_DATA_PATH,
-        TRACK_IDS_PATH,
-        INTERACTION_MATRIX_PATH,
-    ]
-    missing_collab_paths = [path for path in collab_paths if not path.exists()]
-    hybrid_paths = [
-        COLLAB_FILTERED_DATA_PATH,
-        TRACK_IDS_PATH,
-        INTERACTION_MATRIX_PATH,
-        HYBRID_TRANSFORMED_DATA_PATH,
-    ]
-    missing_hybrid_paths = [path for path in hybrid_paths if not path.exists()]
-
-    if filtering_type == "Collaborative Filtering" and missing_collab_paths:
-        st.error(
-            "Collaborative filtering files were not found. "
-            "Run the collaborative filtering pipeline first."
-        )
-        for path in missing_collab_paths:
-            st.code(str(path))
-        st.stop()
-
-    if filtering_type == "Hybrid Recommendation" and missing_hybrid_paths:
-        st.error(
-            "Hybrid recommendation files were not found. "
-            "Run the collaborative filtering and transform-filtered-data pipelines first."
-        )
-        for path in missing_hybrid_paths:
-            st.code(str(path))
-        st.stop()
-
-    if filtering_type == "Content-Based Filtering":
-        songs_data = load_song_metadata(RAW_DATA_PATH)
-        transformed_data = load_transformed_data(TRANSFORMED_DATA_PATH)
-
-        if len(songs_data) != transformed_data.shape[0]:
-            st.error(
-                "Song metadata and transformed feature matrix are not aligned. "
-                "Re-run the data cleaning and content filtering pipelines."
-            )
-            st.stop()
-
-    elif filtering_type == "Collaborative Filtering":
-        songs_data = load_collab_song_metadata(COLLAB_FILTERED_DATA_PATH)
-        track_ids = load_track_ids(TRACK_IDS_PATH)
-        interaction_matrix = load_interaction_matrix(INTERACTION_MATRIX_PATH)
-
-        if interaction_matrix.shape[0] != len(track_ids):
-            st.error(
-                "Track IDs and interaction matrix are not aligned. "
-                "Re-run the collaborative filtering pipeline."
-            )
-            st.stop()
-
-    else:
-        songs_data = load_collab_song_metadata(COLLAB_FILTERED_DATA_PATH)
-        transformed_data = load_transformed_data(HYBRID_TRANSFORMED_DATA_PATH)
-        track_ids = load_track_ids(TRACK_IDS_PATH)
-        interaction_matrix = load_interaction_matrix(INTERACTION_MATRIX_PATH)
-
-        if len(songs_data) != transformed_data.shape[0]:
-            st.error(
-                "Filtered songs data and transformed hybrid matrix are not aligned. "
-                "Re-run the transform-filtered-data pipeline."
-            )
-            st.stop()
-
-        if interaction_matrix.shape[0] != len(track_ids):
-            st.error(
-                "Track IDs and interaction matrix are not aligned. "
-                "Re-run the collaborative filtering pipeline."
-            )
-            st.stop()
-
-    song_options = songs_data[["name", "artist"]].drop_duplicates().sort_values(
-        by=["name", "artist"]
-    )
-    selected_label = st.selectbox(
-        "Select a song",
-        options=song_options.index,
-        format_func=lambda index: format_label(song_options.loc[index]),
-    )
-    selected_song = song_options.loc[selected_label]
-
-    k = st.selectbox(
-        "Number of recommendations",
-        options=[5, 10, 15, 20],
-        index=1,
-    )
-
-    content_weight = 0.5
-    if filtering_type == "Hybrid Recommendation":
-        content_weight = st.slider(
-            "Content-based weight",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.5,
-            step=0.05,
+    if filtering_type == "Hybrid Recommender System":
+        diversity = st.slider(
+            label="Diversity in Recommendations",
+            min_value=1,
+            max_value=10,
+            value=5,
+            step=1
         )
 
-    if st.button("Get Recommendations", type="primary"):
-        try:
-            if filtering_type == "Content-Based Filtering":
-                recommendations = content_recommendation(
-                    song_name=selected_song["name"],
-                    artist_name=selected_song["artist"],
-                    songs_data=songs_data,
-                    transformed_data=transformed_data,
-                    k=k,
-                )
+        content_based_weight = 1 - (diversity / 10)
+else:
+    # type of filtering
+    filtering_type = st.selectbox(label= 'Select the type of filtering:', 
+                                options= ['Content-Based Filtering'])
 
-            elif filtering_type == "Collaborative Filtering":
-                recommendations = collaborative_recommendation(
-                    song_name=selected_song["name"],
-                    artist_name=selected_song["artist"],
-                    track_ids=track_ids,
-                    songs_data=songs_data,
-                    interaction_matrix=interaction_matrix,
-                    k=k,
-                )
-
-            else:
-                recommender = HybridRecommenderSystem(
-                    num_of_recommendations=k,
-                    weight_content_based=content_weight,
-                )
-                recommendations = recommender.give_recommendation(
-                    song_name=selected_song["name"],
-                    artist_name=selected_song["artist"],
-                    songs_data=songs_data,
-                    transformed_matrix=transformed_data,
-                    track_ids=track_ids,
-                    interaction_matrix=interaction_matrix,
-                )
-
-        except ValueError as e:
-            st.warning(str(e))
-
-        except Exception as e:
-            st.error(f"Unable to generate recommendations: {str(e)}")
-
-        else:
-            st.subheader(
-                f"{filtering_type} recommendations for "
-                f"{selected_song['name'].title()} by {selected_song['artist'].title()}"
-            )
-
-            for index, recommendation in recommendations.iterrows():
-
-                song_name = recommendation["name"].title()
-                artist_name = recommendation["artist"].title()
-
-                # Header
-                if index == 0:
+# Button
+if filtering_type == 'Content-Based Filtering':
+    if st.button('Get Recommendations'):
+        if ((st.session_state.songs_data["name"] == song_name) & (st.session_state.songs_data['artist'] == artist_name)).any():
+            st.write('Recommendations for', f"**{song_name}** by **{artist_name}**")
+            recommendations = content_recommendation(song_name=song_name,
+                                                     artist_name=artist_name,
+                                                     songs_data=st.session_state.songs_data,
+                                                     transformed_data=st.session_state.transformed_data,
+                                                     k=k)
+            
+            # Display Recommendations
+            for ind , recommendation in recommendations.iterrows():
+                song_name = recommendation['name'].title()
+                artist_name = recommendation['artist'].title()
+                
+                if ind == 0:
                     st.markdown("## Currently Playing")
                     st.markdown(f"#### **{song_name}** by **{artist_name}**")
-
-                elif index == 1:
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+                elif ind == 1:   
                     st.markdown("### Next Up 🎵")
-                    st.markdown(f"#### {index}. **{song_name}** by **{artist_name}**")
-
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
                 else:
-                    st.markdown(f"#### {index}. **{song_name}** by **{artist_name}**")
-
-                # Preview URL
-                preview_url = recommendation.get("pulse_play_preview_url")
-
-                # Fall back to spotify preview if pulse play preview is unavailable
-                if pd.isna(preview_url) or not preview_url:
-                    preview_url = recommendation.get("spotify_preview_url")
-
-                if pd.notna(preview_url) and preview_url:
-                    st.audio(preview_url)
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+        else:
+            st.write(f"Sorry, we couldn't find {song_name} in our database. Please try another song.")
+            
+elif filtering_type == 'Collaborative Filtering':
+    if st.button('Get Recommendations'):
+        if ((st.session_state.filtered_data["name"] == song_name) & (st.session_state.filtered_data["artist"] == artist_name)).any():
+            st.write('Recommendations for', f"**{song_name}** by **{artist_name}**")
+            recommendations = collaborative_recommendation(song_name=song_name,
+                                                           artist_name=artist_name,
+                                                           track_ids=st.session_state.track_ids,
+                                                           songs_data=st.session_state.filtered_data,
+                                                           interaction_matrix=st.session_state.interaction_matrix,
+                                                           k=k)
+            
+            # Display Recommendations
+            for ind , recommendation in recommendations.iterrows():
+                song_name = recommendation['name'].title()
+                artist_name = recommendation['artist'].title()
+                
+                if ind == 0:
+                    st.markdown("## Currently Playing")
+                    st.markdown(f"#### **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+                elif ind == 1:   
+                    st.markdown("### Next Up 🎵")
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
                 else:
-                    st.caption("Preview audio is not available for this track.")
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+        else:
+            st.write(f"Sorry, we couldn't find {song_name} in our database. Please try another song.")
 
-                st.divider()
-
-
-if __name__ == "__main__":
-    main()
+elif filtering_type == "Hybrid Recommender System":
+    if st.button('Get Recommendations'):
+        if ((st.session_state.filtered_data["name"] == song_name) & (st.session_state.filtered_data["artist"] == artist_name)).any():
+            st.write('Recommendations for', f"**{song_name}** by **{artist_name}**")
+            recommender = HybridRecommenderSystem(
+                                                    num_of_recommendations= k,
+                                                    weight_content_based= content_based_weight
+                                                    )
+                                    
+            # get the recommendations
+            recommendations = recommender.give_recommendation(song_name= song_name,
+                                                            artist_name= artist_name,
+                                                            songs_data= st.session_state.filtered_data,
+                                                            transformed_matrix= st.session_state.transformed_hybrid_data,
+                                                            track_ids= st.session_state.track_ids,
+                                                            interaction_matrix= st.session_state.interaction_matrix)
+            # Display Recommendations
+            for ind , recommendation in recommendations.iterrows():
+                song_name = recommendation['name'].title()
+                artist_name = recommendation['artist'].title()
+                
+                if ind == 0:
+                    st.markdown("## Currently Playing")
+                    st.markdown(f"#### **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+                elif ind == 1:   
+                    st.markdown("### Next Up 🎵")
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+                else:
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['pulse_play_preview_url'])
+                    st.write('---')
+        else:
+            st.write(f"Sorry, we couldn't find {song_name} in our database. Please try another song.")

@@ -173,19 +173,57 @@ class HybridRecommenderSystem:
 
         content_based_similarities = self._calculate_content_based_similarities(
             song_index=song_index,
-            transformed_matrix=transformed_matrix,
-        )
-        collab_based_similarities = self._calculate_collab_based_similarities(
-            input_track_id=input_track_id,
-            track_ids=track_ids,
-            interaction_matrix=interaction_matrix,
-        )
+            transformed_matrix=transformed_matrix
+        )        
+   
+        raw_collab_scores = self._calculate_collab_based_similarities(
+                                    input_track_id=input_track_id,
+                                    track_ids=track_ids,
+                                    interaction_matrix=interaction_matrix,
+                                )
+        
+        collab_scores_df = pd.DataFrame({
+                    "track_id": track_ids,
+                    "collab_score": raw_collab_scores
+            })
+        
+        aligned_collab_scores = (
+                        songs_data[["track_id"]]
+                        .merge(collab_scores_df, on="track_id", how="left")
+                        ["collab_score"]
+                        .fillna(0)
+                        .values
+                    )
 
          # normalize content based similarities
         normalized_content_based_similarities = self._normalize_similarities(content_based_similarities)
         
         # normalize collaborative filtering similarities
-        normalized_collaborative_filtering_similarities = self._normalize_similarities(collab_based_similarities)
+        normalized_collaborative_filtering_similarities = self._normalize_similarities(aligned_collab_scores)
+
+        # print("Seed song:")
+        # print(seed_song[["name", "artist"]])
+
+        # print("\nContent best song:")
+        # print(
+        #     songs_data.iloc[np.argmax(content_based_similarities)][["name", "artist"]]
+        # )
+
+        # print("\nCollaborative best song:")
+        # print(
+        #     songs_data.iloc[np.argmax(aligned_collab_scores)][["name", "artist"]]
+        # )
+
+
+        # print("\nSong at position 71 in songs_data:")
+        # print(
+        #     songs_data.iloc[np.argmax(content_based_similarities)][["name", "artist"]]
+        # )
+
+        # print("\nSong at position 4127 in songs_data:")
+        # print(
+        #     songs_data.iloc[np.argmax(aligned_collab_scores)][["name", "artist"]]
+        # )
         
         # weighted combination of similarities
         weighted_scores = self._weighted_scores(content_based_scores= normalized_content_based_similarities, 
@@ -196,7 +234,9 @@ class HybridRecommenderSystem:
         recommendation_indices = np.argsort(weighted_scores.ravel())[-self.num_recomm -1:][::-1] 
         
         # get top k recommendations
-        recommendation_track_ids = track_ids[recommendation_indices]
+        recommendation_track_ids = (
+                                        songs_data.iloc[recommendation_indices]["track_id"].values
+                                    )
        
         # get top scores
         top_scores = np.sort(weighted_scores.ravel())[-self.num_recomm -1:][::-1]
