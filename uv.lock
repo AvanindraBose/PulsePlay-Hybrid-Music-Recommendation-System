@@ -3048,8 +3048,10 @@ name = "pulseplay-hybrid-music-recommendation-system"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "awscli" },
     { name = "category-encoders" },
     { name = "dask", extra = ["dataframe"] },
+    { name = "dvc", extra = ["s3"] },
     { name = "graphviz" },
     { name = "ipykernel" },
     { name = "jinja2" },
@@ -3091,11 +3093,13 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "awscli", specifier = ">=1.45.0" },
     { name = "awscli", marker = "extra == 'pipeline'" },
     { name = "category-encoders" },
     { name = "coverage", marker = "extra == 'test'" },
     { name = "dask", extras = ["dataframe"] },
     { name = "dvc", marker = "extra == 'pipeline'", specifier = ">=3.0" },
+    { name = "dvc", extras = ["s3"], specifier = ">=3.67.1" },
     { name = "dvc", extras = ["s3"], marker = "extra == 'pipeline'" },
     { name = "graphviz", specifier = ">=0.21" },
     { name = "httpx", marker = "extra == 'test'" },
