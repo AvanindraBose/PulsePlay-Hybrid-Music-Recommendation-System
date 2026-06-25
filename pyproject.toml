@@ -25,6 +25,9 @@ dependencies = [
   "asyncpg>=0.31.0",
   "bcrypt>=5.0.0",
   "jose>=1.0.0",
+  "fastapi>=0.138.0",
+  "redis>=8.0.1",
+  "pydantic>=2.13.4",
 ]
 
 # OPTIONAL GROUPS FOR TRAINING / PIPELINES
