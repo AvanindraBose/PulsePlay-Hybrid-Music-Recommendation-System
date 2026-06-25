@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up - Twitter Sentiment Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="page-wrapper auth-shell">
+    <div class="shell">
+      <nav class="topnav auth-topnav">
+        <a href="/" class="nav-link">Sentilytics</a>
+        <div class="nav-actions">
+          <a href="/auth/login" class="btn-nav-secondary">Sign in</a>
+        </div>
+      </nav>
+
+      <header class="auth-header">
+        <span class="eyebrow">Step 1</span>
+        <h1>Create account</h1>
+        <p>Start here, then sign in.</p>
+      </header>
+
+      <main class="auth-layout">
+        <section class="card">
+          {% if error %}
+          <div class="flash flash-error">{{ error }}</div>
+          {% endif %}
+
+          {% if success %}
+          <div class="flash flash-success">{{ success }}</div>
+          {% endif %}
+
+          <form action="/auth/signup" method="POST">
+            <div class="form-group">
+              <label class="form-label" for="username">Username</label>
+              <input
+                class="form-input"
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Username"
+                autocomplete="username"
+                minlength="3"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="email">Email</label>
+              <input
+                class="form-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="password">Password</label>
+              <div class="password-field">
+                <input
+                  class="form-input"
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="At least 8 characters"
+                  autocomplete="new-password"
+                  minlength="8"
+                  pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&amp;*(),.?&quot;:{}|&lt;&gt;]).{8,}"
+                  required
+                />
+                <button type="button" class="password-toggle" data-password-toggle="password" aria-label="Show password">
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <p class="form-help">8+ chars, upper, lower, number, symbol.</p>
+            </div>
+
+            <button type="submit" class="btn-auth">Create account</button>
+          </form>
+
+          <div class="auth-switch">
+            Already have an account? <a href="/auth/login">Sign in</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script>
+    document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const input = document.getElementById(button.getAttribute("data-password-toggle"));
+        const isHidden = input.type === "password";
+
+        input.type = isHidden ? "text" : "password";
+        button.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+        button.innerHTML = isHidden
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.7a3 3 0 0 0 4.2 4.2"></path><path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c6.4 0 10 8 10 8a18.8 18.8 0 0 1-3.2 4.2"></path><path d="M6.7 6.7A18.6 18.6 0 0 0 2 12s3.6 8 10 8a10.7 10.7 0 0 0 5.3-1.4"></path></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
 # from backend.loader.artifacts_loader import load_artifacts
-# from backend.loader.redis_loader import load_redis_client
+from backend.loader.redis_loader import load_redis_client
 
 load_dotenv()
 
@@ -124,8 +124,8 @@ def get_current_user(request: Request) -> str:
 
 # # loading Redis
 
-# async def get_redis_client() -> Redis:
-#     return await load_redis_client()
+async def get_redis_client() -> Redis:
+    return await load_redis_client()
     
     
 def get_refresh_user_id(request: Request) -> str:

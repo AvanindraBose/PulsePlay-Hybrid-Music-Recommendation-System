@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.api import routes_predict,routes_auth,routes_health,routes_root
+from backend.api import routes_auth,routes_health,routes_root
 from backend.core.database import engine,Base
 # from backend.middlewares.response_logger import ResponseLoggerMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -27,6 +27,6 @@ app = FastAPI(title="Twitter Sentiment Detection API", description="API for dete
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 # app.add_middleware(ResponseLoggerMiddleware)
 app.include_router(routes_root.router,tags = ["Root"])
-app.include_router(routes_predict.router , tags=["Predict"])
+# app.include_router(routes_predict.router , tags=["Predict"])
 app.include_router(routes_auth.router , tags=["Auth"])
 app.include_router(routes_health.router , tags=["Health"])
