@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Twitter Sentiment Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="shell">
+      <nav class="topnav">
+        <a href="/dashboard" class="nav-brand">Sentilytics</a>
+        <div class="nav-actions">
+          <form action="/auth/logout" method="POST">
+            <button type="submit" class="btn-logout">Sign out</button>
+          </form>
+        </div>
+      </nav>
+
+      {% if error %}
+      <div class="flash flash-error flash-banner" id="error-banner">
+        <div class="flash-banner-content">
+          <span class="flash-icon"><b>!!!</b></span>
+          <span><b>{{ error }}</b></span>
+        </div>
+        <button type="button" class="flash-close" id="close-banner" aria-label="Dismiss error">&times;</button>
+      </div>
+      {% endif %}
+
+      <main class="hero">
+        <section class="hero-panel">
+          <header class="site-header">
+            <span class="eyebrow">Dashboard</span>
+            <h1>Read the feeling behind the tweet.</h1>
+            <p>Paste the text. Get the signal.</p>
+          </header>
+
+          <div class="hero-markers" aria-hidden="true">
+            <span>Fast</span>
+            <span>Focused</span>
+            <span>Minimal</span>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <p class="card-title">Analyze</p>
+              <p class="card-kicker">One input. One result.</p>
+            </div>
+          </div>
+
+          <form action="/predict" method="POST">
+            <label class="form-label" for="tweet">Tweet</label>
+            <textarea
+              id="tweet"
+              name="text"
+              rows="5"
+              placeholder="Type or paste tweet text..."
+              required
+            ></textarea>
+            <button type="submit" class="btn-predict">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              Analyze sentiment
+            </button>
+          </form>
+        </section>
+      </main>
+
+      <footer class="site-footer">Twitter Sentiment Detection</footer>
+    </div>
+  </div>
+  <script>
+    const closeBannerButton = document.getElementById("close-banner");
+    const errorBanner = document.getElementById("error-banner");
+
+    if (closeBannerButton && errorBanner) {
+      closeBannerButton.addEventListener("click", function () {
+        errorBanner.style.display = "none";
+      });
+    }
+  </script>
+</body>
+</html>

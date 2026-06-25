@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Result - Twitter Sentiment Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="page-wrapper result-shell">
+    <div class="shell">
+      <nav class="topnav result-topnav">
+        <a href="/dashboard" class="nav-link">Dashboard</a>
+      </nav>
+
+      <header class="result-header">
+        <span class="eyebrow">Prediction</span>
+        <h1>Result</h1>
+        <p>Your tweet reading is ready.</p>
+      </header>
+
+      <main class="result-layout">
+        <section class="result-card">
+          <p class="result-label">Sentiment</p>
+
+          <div class="sentiment-badge {% if sentiment == 1 %}sentiment-positive{% elif sentiment == 0 %}sentiment-negative{% else %}sentiment-neutral{% endif %}">
+            {% if sentiment == 1 %}
+              Positive
+            {% elif sentiment == 0 %}
+              Negative
+            {% else %}
+              {{ sentiment }}
+            {% endif %}
+          </div>
+
+          <p class="sentiment-raw">Score: {{ sentiment }}</p>
+
+          <a href="/dashboard" class="btn-back">Analyze another tweet</a>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twitter Sentiment Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="shell">
+      <nav class="topnav">
+        <a href="/" class="nav-brand">Sentilytics</a>
+        <div class="nav-actions">
+          <a href="/auth/login" class="btn-nav-secondary">Sign in</a>
+          <a href="/auth/signup" class="btn-nav-primary">Sign up</a>
+        </div>
+      </nav>
+
+      {% if success %}
+      <div class="flash flash-success flash-banner" id="success-banner">
+        <div class="flash-banner-content">
+          <span class="flash-icon">&#10003;</span>
+          <span>{{ success }}</span>
+        </div>
+        <button type="button" class="flash-close" id="close-success-banner" aria-label="Dismiss success">&times;</button>
+      </div>
+      {% endif %}
+
+      <main class="landing">
+        <section class="landing-hero hero-panel">
+          <header class="site-header">
+            <span class="eyebrow">Twitter sentiment detection</span>
+            <h1>Understand the emotion behind social chatter.</h1>
+            <p>See whether a tweet lands positive or negative in one quick pass.</p>
+          </header>
+
+          <div class="landing-actions">
+            <a href="/auth/signup" class="btn-nav-primary">Get started</a>
+            <a href="/auth/login" class="btn-nav-secondary">I already have an account</a>
+          </div>
+        </section>
+
+        <section class="landing-grid">
+          <article class="info-card">
+            <p class="info-title">What it does</p>
+            <p class="info-copy">Turns tweet text into a fast sentiment prediction through a simple protected workflow.</p>
+          </article>
+
+          <article class="info-card">
+            <p class="info-title">Why it helps</p>
+            <p class="info-copy">Useful for demos, audience monitoring, brand tracking, and quick emotional signal checks.</p>
+          </article>
+
+          <article class="info-card info-card-wide">
+            <p class="info-title">Quick insight</p>
+            <div class="sample-sentiment">
+              <span class="sample-pill sample-positive">Positive</span>
+              <span class="sample-pill sample-negative">Negative</span>
+            </div>
+            <p class="info-copy">Short-form text can shift tone quickly, so a lightweight prediction tool helps spot mood at a glance.</p>
+          </article>
+        </section>
+      </main>
+
+      <footer class="site-footer">Sign up or sign in to start analyzing tweets.</footer>
+    </div>
+  </div>
+  <script>
+    const closeSuccessBannerButton = document.getElementById("close-success-banner");
+    const successBanner = document.getElementById("success-banner");
+
+    if (closeSuccessBannerButton && successBanner) {
+      closeSuccessBannerButton.addEventListener("click", function () {
+        successBanner.style.display = "none";
+      });
+    }
+  </script>
+</body>
+</html>
