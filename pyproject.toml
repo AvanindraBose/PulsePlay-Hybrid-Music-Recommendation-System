@@ -7,41 +7,31 @@ requires-python = ">=3.11"
 
 # ONLY API + INFERENCE DEPENDENCIES
 dependencies = [
-  "matplotlib",
-  "seaborn",
-  "missingno",
-  "plotly",
-  "nbformat>=4.2.0",
-  "ipykernel>=7.2.0",
   "scikit-learn",
-  "category_encoders",
-  "dask[dataframe]",
-  "jinja2>=3.1.6",
-  "graphviz>=0.21",
-  "streamlit>=1.58.0",
-  "dvc[s3]>=3.67.1",
-  "awscli>=1.45.0",
-  "sqlalchemy>=2.0.51",
-  "asyncpg>=0.31.0",
-  "bcrypt>=5.0.0",
-  "fastapi>=0.138.0",
-  "redis>=8.0.1",
-  "pydantic[email]>=2.13.4",
-  "python-jose[cryptography]>=3.5.0",
-  "python-multipart>=0.0.32",
+  "sqlalchemy",
+  "asyncpg",
+  "bcrypt",
+  "fastapi",
+  "redis",
+  "pydantic[email]",
+  "python-jose[cryptography]",
+  "python-multipart",
+  "uvicorn",
+  "pydantic",
+  "python-dotenv",
+  "jinja2",
+  "pandas",
+  "numpy"
 ]
 
 # OPTIONAL GROUPS FOR TRAINING / PIPELINES
 [project.optional-dependencies]
 
-Hptuning = [
-  "optuna",
-]
-
 pipeline = [
   "dvc>=3.0",
-  "dvc[s3]",
-  "awscli",
+  "category_encoders",
+  "dvc[s3]>=3.67.1",
+  "awscli>=1.45.0",
 ]
 
 dev = [
@@ -52,6 +42,11 @@ dev = [
   "kagglehub",
   "nbformat>=4.2.0",
   "ipykernel>=7.2.0",
+  "category_encoders",
+  "dask[dataframe]",
+  "jinja2>=3.1.6",
+  "graphviz>=0.21",
+  "streamlit>=1.58.0",
 ]
 
 test = [
