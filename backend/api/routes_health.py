@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from backend.core.dependencies import get_db,get_redis_client
@@ -11,13 +11,31 @@ router = APIRouter(prefix="/internal" , tags=["Health"])
 
 @router.get("/health")
 async def health_check(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     redis=Depends(get_redis_client)
 ):
     health_logger.save_logs("Health check initiated",log_level='info')
 
+    state = request.app.state
+
     db_status = "ok"
     redis_status = "ok"
+    loader_status = "ok"
+
+    # 🔹 Loader check
+    try: 
+        health = {
+        "songs_data": hasattr(state, "songs_data"),
+        "transformed_data": hasattr(state, "transformed_data"),
+        "track_ids": hasattr(state, "track_ids"),
+        "filtered_data": hasattr(state, "filtered_data"),
+        "interaction_matrix": hasattr(state, "interaction_matrix"),
+        "hybrid_transformed": hasattr(state, "hybrid_transformed"),
+        }
+    except Exception as e :
+        health_logger.save_logs(f"Database connection failed: {e}",log_level="error")
+        loader_status = "error"
 
     # 🔹 DB check
     try:
@@ -36,13 +54,14 @@ async def health_check(
         redis_status = "error"
 
 
-    if db_status == "ok" and redis_status == "ok":
+    if db_status == "ok" and redis_status == "ok" and loader_status=="ok":
         return {"status": "ok"}
 
     return {
         "status": "error",
         "details": {
             "database": db_status,
-            "redis": redis_status
+            "redis": redis_status,
+            "loader": loader_status
         }
     }
