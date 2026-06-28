@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.api import routes_auth,routes_health,routes_root
+from backend.api import routes_auth,routes_health,routes_root,routes_recommendation
 from backend.core.database import engine,Base
 from fastapi.staticfiles import StaticFiles
 from backend.logging_fastapi.logger_api import auth_logger
@@ -23,9 +23,15 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
     auth_logger.save_logs("Database Connection Closed successfully.")
 
-app = FastAPI(title="Twitter Sentiment Detection API", description="API for detecting sentiment in tweets", version="1.0",lifespan=lifespan)
+app = FastAPI(
+    title="Pulse Play API",
+    description="API for Pulse Play music recommendations",
+    version="1.0",
+    lifespan=lifespan,
+)
 
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 app.include_router(routes_root.router,tags = ["Root"])
 app.include_router(routes_auth.router , tags=["Auth"])
+app.include_router(routes_recommendation.router,tags=["Recommendations"])
 app.include_router(routes_health.router , tags=["Health"])

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - Twitter Sentiment Detection</title>
+  <title>Dashboard - Pulse Play</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="page-wrapper">
     <div class="shell">
       <nav class="topnav">
-        <a href="/dashboard" class="nav-brand">Sentilytics</a>
+        <a href="/dashboard" class="nav-brand">Pulse Play</a>
         <div class="nav-actions">
           <form action="/auth/logout" method="POST">
             <button type="submit" class="btn-logout">Sign out</button>
@@ -28,52 +28,128 @@
       </div>
       {% endif %}
 
-      <main class="hero">
-        <section class="hero-panel">
-          <header class="site-header">
-            <span class="eyebrow">Dashboard</span>
-            <h1>Read the feeling behind the tweet.</h1>
-            <p>Paste the text. Get the signal.</p>
-          </header>
-
-          <div class="hero-markers" aria-hidden="true">
-            <span>Fast</span>
-            <span>Focused</span>
-            <span>Minimal</span>
-          </div>
-        </section>
-
-        <section class="card">
+      <main class="recommendation-layout">
+        <section class="card recommendation-card">
           <div class="card-header">
             <div>
-              <p class="card-title">Analyze</p>
-              <p class="card-kicker">One input. One result.</p>
+              <p class="card-title">Find music</p>
+              <p class="card-kicker">Search a song and choose how Pulse Play should recommend.</p>
             </div>
           </div>
 
-          <form action="/predict" method="POST">
-            <label class="form-label" for="tweet">Tweet</label>
-            <textarea
-              id="tweet"
-              name="text"
-              rows="5"
-              placeholder="Type or paste tweet text..."
-              required
-            ></textarea>
-            <button type="submit" class="btn-predict">
+          <form data-recommendation-form>
+            <div class="recommendation-form-grid">
+              <div class="form-group">
+                <label class="form-label" for="song-name">Song name</label>
+                <input
+                  class="form-input"
+                  id="song-name"
+                  type="text"
+                  placeholder="Blinding Lights"
+                  autocomplete="off"
+                  data-song-input
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="artist-name">Artist name</label>
+                <input
+                  class="form-input"
+                  id="artist-name"
+                  type="text"
+                  placeholder="The Weeknd"
+                  autocomplete="off"
+                  data-artist-input
+                />
+              </div>
+            </div>
+
+            <div class="recommendation-controls">
+              <div class="form-group">
+                <label class="form-label" for="recommendation-type">Type</label>
+                <select class="form-input" id="recommendation-type" data-type-select>
+                  <option value="content">Content</option>
+                  <option value="collaborative">Collaborative</option>
+                  <option value="hybrid" selected>Hybrid</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="recommendation-count">Results</label>
+                <select class="form-input" id="recommendation-count" data-count-select>
+                  <option value="5" selected>5 songs</option>
+                  <option value="10">10 songs</option>
+                  <option value="15">15 songs</option>
+                  <option value="20">20 songs</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="diversity-control" data-diversity-wrap>
+              <div class="diversity-heading">
+                <label class="form-label" for="diversity">Diversity</label>
+                <span data-diversity-value>5 - balanced</span>
+              </div>
+              <input
+                id="diversity"
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value="5"
+                data-diversity-input
+              />
+            </div>
+
+            <div class="recommendation-status" data-status hidden></div>
+
+            <button type="submit" class="btn-predict" data-search-button>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              Analyze sentiment
+              Get recommendations
             </button>
           </form>
         </section>
+
+        <section class="player-panel">
+          <div class="player-art" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"></path>
+            </svg>
+          </div>
+
+          <div class="selected-song" data-selected-song hidden>
+            <p class="result-label">Selected song</p>
+            <h2 data-selected-song-title></h2>
+            <p data-selected-song-artist></p>
+            <span data-selected-song-sources></span>
+          </div>
+
+          <div class="now-playing" data-player hidden>
+            <p class="result-label">Now playing</p>
+            <h2 data-player-title>Select a recommendation</h2>
+            <p data-player-artist>Preview audio will play here.</p>
+            <audio controls data-audio-player></audio>
+          </div>
+        </section>
+
+        <section class="recommendation-results">
+          <div class="card-header">
+            <div>
+              <p class="card-title" data-results-title>Search for a song to begin</p>
+              <p class="card-kicker">Results appear here after the APIs respond.</p>
+            </div>
+          </div>
+          <ol class="recommendation-list" data-results-list></ol>
+        </section>
       </main>
 
-      <footer class="site-footer">Twitter Sentiment Detection</footer>
+      <footer class="site-footer">Pulse Play Hybrid Music Recommendation System</footer>
     </div>
   </div>
+
   <script>
     const closeBannerButton = document.getElementById("close-banner");
     const errorBanner = document.getElementById("error-banner");
@@ -84,5 +160,6 @@
       });
     }
   </script>
+  <script src="/static/app.js"></script>
 </body>
 </html>
