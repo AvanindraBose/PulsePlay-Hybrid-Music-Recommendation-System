@@ -5,3 +5,4 @@
     dir = C:/dvc-cache-pulse
 ['remote "aws-remote"']
     url = s3://pulse-play-dvc-bucket
+    

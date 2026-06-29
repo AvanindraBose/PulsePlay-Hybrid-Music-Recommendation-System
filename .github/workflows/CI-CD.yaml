@@ -42,6 +42,7 @@ jobs:
             ml:
               - 'src/**'
               - 'data/**'
+              - '.dvc/config'
               - 'dvc.yaml'
               - 'dvc.lock'
               - 'Script/hybrid_recommendation.py'
@@ -377,8 +378,8 @@ jobs:
         
         - name: Configure AWS S3 for DVC Artifacts
           run: |
-            uv run dvc remote modify origin access_key_id ${{ secrets.AWS_DVC_ACCESS_KEY_ID }}
-            uv run dvc remote modify origin secret_access_key ${{ secrets.AWS_DVC_SECRET_ACCESS_KEY }}
+            uv run dvc remote modify aws-remote access_key_id ${{ secrets.AWS_DVC_ACCESS_KEY_ID }}
+            uv run dvc remote modify aws-remote secret_access_key ${{ secrets.AWS_DVC_SECRET_ACCESS_KEY }}
         
         - name: Push DVC Artifacts
           run: |
