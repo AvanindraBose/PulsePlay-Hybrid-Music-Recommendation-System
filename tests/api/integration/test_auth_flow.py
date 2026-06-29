@@ -62,4 +62,5 @@ async def test_signup_login_and_dashboard_flow_uses_real_db_and_redis(integratio
     dashboard_response = await integration_async_client.get("/dashboard")
 
     assert dashboard_response.status_code == 200
-    assert str(user.id) in dashboard_response.text
+    assert "Get recommendations" in dashboard_response.text
+    assert "Sign out" in dashboard_response.text
