@@ -40,6 +40,7 @@ def interaction_matrix():
     )
 
 
+
 def test_content_recommendation_returns_song_rows(songs_data, feature_matrix):
     result = content_recommendation(
         song_name="Blinding Lights",

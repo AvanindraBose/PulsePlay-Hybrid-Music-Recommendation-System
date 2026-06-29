@@ -43,7 +43,6 @@ jobs:
               - 'data/**'
               - 'dvc.yaml'
               - 'dvc.lock'
-              - 'params.yaml'
               - 'Script/hybrid_recommendation.py'
               - 'Script/recommender_script.py'
               - 'tests/recommendation-engine/**'
