@@ -1,6 +1,6 @@
 stages:
   data-cleaning:
-    cmd: py -m src.data.data_cleaning
+    cmd: python -m src.data.data_cleaning
     deps:
     - data/raw/songs-info.csv
     - src/data/data_cleaning.py
@@ -8,7 +8,7 @@ stages:
     - data/cleaned/songs-info-cleaned-content.csv
     - data/cleaned/songs-info-collab.csv
   content-filtering:
-    cmd: py -m src.content_based_filtering.content_filtering
+    cmd: python -m src.content_based_filtering.content_filtering
     deps:
     - data/cleaned/songs-info-cleaned-content.csv
     - src/content_based_filtering/content_filtering.py
@@ -16,7 +16,7 @@ stages:
     - data/processed/transformed_content_filtering.npz
     - models/transformers.joblib
   collaborative-filtering:
-    cmd: py -m src.collaborative_filtering.collaborative_recommendation
+    cmd: python -m src.collaborative_filtering.collaborative_recommendation
     deps:
     - data/raw/user-info.csv
     - data/cleaned/songs-info-collab.csv
@@ -26,11 +26,10 @@ stages:
     - data/processed/track_ids.npy
     - data/processed/interaction_matrix.npz
   transform-filtered-data:
-    cmd: py -m src.transformation.transform_filtered_data
+    cmd: python -m src.transformation.transform_filtered_data
     deps:
     - data/processed/collab_filtered.csv
     - models/transformers.joblib
     - src/transformation/transform_filtered_data.py
     outs:
     - data/processed/transformed_hybrid_data.npz
-    
