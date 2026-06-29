@@ -14,6 +14,7 @@ async def test_login_page_loads(async_client):
     assert "Pulse Play" in response.text
 
 
+
 async def test_logout_redirects_to_landing(async_client):
     response = await async_client.post("/auth/logout")
 
