@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 import pytest_asyncio
 from collections.abc import AsyncIterator
 from urllib.parse import unquote
@@ -13,12 +12,6 @@ from backend.main import app
 
 LOCAL_DB_HOSTS = {"127.0.0.1", "localhost", "postgres"}
 TEST_DATABASE_NAME = "pulse_play_test"
-
-
-def pytest_collection_modifyitems(items):
-    session_loop = pytest.mark.asyncio(loop_scope="session")
-    for item in items:
-        item.add_marker(session_loop)
 
 
 def _assert_local_database() -> None:
@@ -43,16 +36,20 @@ async def integration_services() -> AsyncIterator[None]:
 
     redis = await load_redis_client()
     await redis.flushdb()
+    await close_redis_client()
+    await engine.dispose()
 
     yield
 
+    redis = await load_redis_client()
     await redis.flushdb()
     await close_redis_client()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    await engine.dispose()
 
 
-@pytest_asyncio.fixture(loop_scope="session", autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_integration_state() -> AsyncIterator[None]:
     async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
@@ -60,11 +57,16 @@ async def clean_integration_state() -> AsyncIterator[None]:
 
     redis = await load_redis_client()
     await redis.flushdb()
+    await close_redis_client()
+    await engine.dispose()
 
     yield
 
+    await close_redis_client()
+    await engine.dispose()
 
-@pytest_asyncio.fixture(loop_scope="session")
+
+@pytest_asyncio.fixture
 async def integration_app():
     app.dependency_overrides.clear()
     app.state.songs_data = pd.DataFrame([{"name": "blinding lights", "artist": "the weeknd"}])
@@ -79,7 +81,7 @@ async def integration_app():
     app.dependency_overrides.clear()
 
 
-@pytest_asyncio.fixture(loop_scope="session")
+@pytest_asyncio.fixture
 async def integration_async_client(integration_app) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=integration_app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
