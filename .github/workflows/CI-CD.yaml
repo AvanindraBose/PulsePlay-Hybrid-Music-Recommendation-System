@@ -203,7 +203,7 @@ jobs:
         run: uv run dvc repro
 
       - name: run model tests
-        run: uv run pytest tests/model -q
+        run: uv run pytest tests/recommendation-engine -q
        
       - name: Upload DVC outputs
         uses: actions/upload-artifact@v4
