@@ -1,16 +1,14 @@
-name: CI-Pipeline
+name: CI
 
 on:
   push:
     branches:
-      - "main"
+      - main
   pull_request:
     branches:
       - main
-  # workflow_dispatch:
 
 jobs:
-
   ci-lint:
     runs-on: ubuntu-latest
     steps:
@@ -25,12 +23,11 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       ml: ${{ steps.filter.outputs.ml }}
-      container: ${{ steps.filter.outputs.container }}
     steps:
-      - name: checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: detect changed paths
+      - name: Detect changed paths
         id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -47,14 +44,92 @@ jobs:
               - 'dvc.yaml'
               - 'dvc.lock'
               - 'params.yaml'
-              - 'Prod-Script/**'
-              - 'tests/model/**'
+              - 'Script/hybrid_recommendation.py'
+              - 'Script/recommender_script.py'
+              - 'tests/recommendation-engine/**'
               - 'pyproject.toml'
               - 'uv.lock'
-            container:
-              - 'Dockerfile'
-              - 'docker-compose.yaml'
-              - '.dockerignore'
-              - '.github/ecs/**'
 
+  model-tests:
+    needs: changes
+    if: needs.changes.outputs.ml == 'true'
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.4"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: 0.11.6
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --extra test
+
+      - name: Run model tests
+        run: uv run pytest tests/recommendation-engine -q
+
+  api-tests:
+    needs: changes
+    if: |
+      needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    env:
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/pulse_play_test
+      JWT_ACCESS_SECRET_KEY: ci-access-secret
+      JWT_REFRESH_SECRET_KEY: ci-refresh-secret
+      REDIS_URL: redis://127.0.0.1:6379/0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.4"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: 0.11.6
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --extra test
+
+      - name: Run unit tests
+        run: uv run pytest tests/api/unit -q
+
+      - name: Run integration tests
+        run: uv run pytest tests/api/integration -q
+
+      - name: Upload API test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-logs
+          path: logs/
