@@ -30,6 +30,7 @@ dependencies = [
 pipeline = [
   "dvc>=3.0",
   "category_encoders",
+  "dask[dataframe]",
   "dvc[s3]>=3.67.1",
   "awscli>=1.45.0",
 ]
