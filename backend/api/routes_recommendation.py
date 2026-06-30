@@ -1,6 +1,7 @@
-from fastapi import APIRouter,Request,HTTPException
+from fastapi import APIRouter,Request,HTTPException,Depends
 from backend.schema.recommendation import Song,RecommendRequest,SearchResponse,HybridRequest,RecommendResponse
 from backend.logging_fastapi.logger_api import prediction_logger
+from backend.core.dependencies import get_current_user
 from backend.core.helpers import _df_to_songs,_song_exists
 from Script.recommender_script import collaborative_recommendation,content_recommendation
 from Script.hybrid_recommendation import HybridRecommenderSystem
@@ -16,7 +17,8 @@ tags=["Recommendations"])
 async def get_song(
     song_name: str,
     artist_name: str,
-    request: Request
+    request: Request,
+    _ = Depends(get_current_user)
 ):
     ''' 
     GET because we are only checking/reading — no computation triggered yet.
@@ -51,7 +53,8 @@ summary="Content-Based recommendations — similar audio features",
 tags=["Recommendations"])    
 async def get_content_recommendation(
     body: RecommendRequest,
-    request: Request
+    request: Request,
+    _=Depends(get_current_user)
 ):
     '''
     POST because we are triggering ML inference, not just reading data.
@@ -93,7 +96,8 @@ summary="Collaborative recommendations — based on User History patterns",
 tags=["Recommendations"])
 async def get_collab_recommendation(
     body: RecommendRequest,
-    request: Request
+    request: Request,
+    _ = Depends(get_current_user)
 ):
     '''
     POST — same reasoning, ML computation triggered.
@@ -136,7 +140,8 @@ async def get_collab_recommendation(
 )
 async def get_hybrid_recommendation(
     body: HybridRequest,
-    request: Request
+    request: Request,
+    _ = Depends(get_current_user)
 ):
     s, a = body.song_name.lower(), body.artist_name.lower()
 
