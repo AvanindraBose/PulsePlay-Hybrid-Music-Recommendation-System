@@ -12,8 +12,20 @@ from backend.main import app
 
 
 class FakeRedis:
+    def __init__(self):
+        self.store = {}
+
     async def ping(self) -> bool:
         return True
+
+    async def get(self, key: str):
+        return self.store.get(key)
+
+    async def setex(self, key: str, seconds: int, value):
+        self.store[key] = str(value)
+
+    async def incr(self, key: str):
+        self.store[key] = str(int(self.store.get(key, 0)) + 1)
 
 
 @pytest.fixture
@@ -36,8 +48,12 @@ def unit_app(fake_db: AsyncMock, fake_redis: FakeRedis):
     async def override_get_redis():
         return fake_redis
 
+    async def override_get_current_user():
+        return "test-user"
+
     app.dependency_overrides[dependencies.get_db] = override_get_db
     app.dependency_overrides[dependencies.get_redis_client] = override_get_redis
+    app.dependency_overrides[dependencies.get_current_user] = override_get_current_user
 
     app.state.songs_data = pd.DataFrame(
         [

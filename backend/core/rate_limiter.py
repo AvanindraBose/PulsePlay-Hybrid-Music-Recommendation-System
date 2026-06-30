@@ -1,7 +1,7 @@
 import logging
 import os
 from dotenv import load_dotenv
-from fastapi import Depends, Request
+from fastapi import Depends, Request, HTTPException, status
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
 from backend.core.dependencies import get_current_user, get_redis_client, get_refresh_user_id
@@ -69,25 +69,28 @@ async def refresh_rate_limiter(
         return "redis_unavailable"
 
 
-async def predict_rate_limiter(
+async def recommend_rate_limiter(
     user_id: str = Depends(get_current_user),
     redis: Redis = Depends(get_redis_client),
 ):
     try:
-        key = f"rate:predict:{user_id}"
+        key = f"rate:recommend:{user_id}"
         current_count = await redis.get(key)
 
         if current_count is None:
             await redis.setex(key, PREDICT_RATE_WINDOW, 1)
             prediction_logger.save_logs(f"Prediction request from user: {user_id}", log_level="info")
-            return None
+            return
 
         if int(current_count) >= PREDICT_RATE_LIMIT:
             prediction_logger.save_logs(f"Rate limit exceeded for user: {user_id}", log_level="warning")
-            return "rate_limited"
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too Many Recommendation Reuqest. Please Try again after some time."
+            )
 
         await redis.incr(key)
-        return None
+        return
     except RedisError:
-        prediction_logger.save_logs("Redis unavailable - prediction rate limiter failed", log_level="critical")
-        return "redis_unavailable"
+        prediction_logger.save_logs("Redis unavailable - prediction rate limiter bypassed", log_level="critical")
+        

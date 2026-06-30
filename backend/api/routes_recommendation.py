@@ -5,6 +5,7 @@ from backend.core.dependencies import get_current_user
 from backend.core.helpers import _df_to_songs,_song_exists
 from Script.recommender_script import collaborative_recommendation,content_recommendation
 from Script.hybrid_recommendation import HybridRecommenderSystem
+from backend.core.rate_limiter import recommend_rate_limiter
 
 router = APIRouter(prefix="/api")
 
@@ -18,7 +19,8 @@ async def get_song(
     song_name: str,
     artist_name: str,
     request: Request,
-    _ = Depends(get_current_user)
+    _ = Depends(get_current_user),
+    __ = Depends(recommend_rate_limiter)
 ):
     ''' 
     GET because we are only checking/reading — no computation triggered yet.
@@ -54,7 +56,8 @@ tags=["Recommendations"])
 async def get_content_recommendation(
     body: RecommendRequest,
     request: Request,
-    _=Depends(get_current_user)
+    _=Depends(get_current_user),
+    __=Depends(recommend_rate_limiter)
 ):
     '''
     POST because we are triggering ML inference, not just reading data.
@@ -97,7 +100,8 @@ tags=["Recommendations"])
 async def get_collab_recommendation(
     body: RecommendRequest,
     request: Request,
-    _ = Depends(get_current_user)
+    _ = Depends(get_current_user),
+    __ = Depends(recommend_rate_limiter)
 ):
     '''
     POST — same reasoning, ML computation triggered.
@@ -141,7 +145,8 @@ async def get_collab_recommendation(
 async def get_hybrid_recommendation(
     body: HybridRequest,
     request: Request,
-    _ = Depends(get_current_user)
+    _ = Depends(get_current_user),
+    __ = Depends(recommend_rate_limiter)
 ):
     s, a = body.song_name.lower(), body.artist_name.lower()
 
@@ -178,5 +183,3 @@ async def get_hybrid_recommendation(
         filter_type="Hybrid Recommender System",
         recommendations=_df_to_songs(results),
     )
-    
-
