@@ -6,6 +6,7 @@ from backend.logging_fastapi.logger_api import auth_logger
 from contextlib import asynccontextmanager
 from backend.loader.redis_loader import close_redis_client
 from backend.loader.asset_loader import load_datasets
+from prometheus_fastapi_instrumentator import Instrumentator
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,7 +30,8 @@ app = FastAPI(
     version="1.0",
     lifespan=lifespan,
 )
-
+#  this piece of code will expose the /metric endpoint
+Instrumentator().instrument(app).expose(app)
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 app.include_router(routes_root.router,tags = ["Root"])
 app.include_router(routes_auth.router , tags=["Auth"])
