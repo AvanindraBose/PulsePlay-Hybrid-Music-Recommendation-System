@@ -21,7 +21,10 @@ dependencies = [
   "python-dotenv",
   "jinja2",
   "pandas",
-  "numpy"
+  "numpy",
+
+  # Observability Depndencies
+  "prometheus-fastapi-instrumentator",
 ]
 
 # OPTIONAL GROUPS FOR TRAINING / PIPELINES
