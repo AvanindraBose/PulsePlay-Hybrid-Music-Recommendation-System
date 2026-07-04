@@ -31,6 +31,20 @@ services:
       retries: 10
     networks:
       - backend
+  
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"
+    env_file:
+      - .env                      # Remmber the REDIS_ADDR variable is defined in the .env file ✅
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - backend                   # same network as redis ✅
 
 
 networks:
