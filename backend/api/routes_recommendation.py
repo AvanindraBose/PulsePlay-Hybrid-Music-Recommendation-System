@@ -51,15 +51,15 @@ async def get_song(
     Frontend calls this silently when user clicks "Get Recommendations".
     Response tells the frontend which filter options to unlock.
     '''
-    try: 
-        start_time = time.perf_counter()
-        status_code = "200"
-        endpoint = request.url.path
-        method = request.method
-        REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
-        SONG_NAME_LENGTH.observe(len(song_name))
-        ARTIST_NAME_LENGTH.observe(len(artist_name))
+    start_time = time.perf_counter()
+    status_code = "200"
+    endpoint = request.url.path
+    method = request.method
+    REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
+    SONG_NAME_LENGTH.observe(len(song_name))
+    ARTIST_NAME_LENGTH.observe(len(artist_name))
 
+    try: 
         s,a = song_name.lower() , artist_name.lower()
 
         in_content = _song_exists(request.app.state.songs_data,   s, a)
@@ -126,14 +126,15 @@ async def get_content_recommendation(
     POST because we are triggering ML inference, not just reading data.
     Frontend chains this automatically after a successful /song/search.
     '''
+    start_time = time.perf_counter()
+    endpoint = request.url.path
+    method = request.method
+    status_code = "200"
+    REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
+    SONG_NAME_LENGTH.observe(len(body.song_name))
+    ARTIST_NAME_LENGTH.observe(len(body.artist_name))
+
     try: 
-        start_time = time.perf_counter()
-        endpoint = request.url.path
-        method = request.method
-        status_code = "200"
-        REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
-        SONG_NAME_LENGTH.observe(len(body.song_name))
-        ARTIST_NAME_LENGTH.observe(len(body.artist_name))
 
         s, a = body.song_name.lower(), body.artist_name.lower()
 
@@ -222,14 +223,15 @@ async def get_collab_recommendation(
     POST — same reasoning, ML computation triggered.
     Only available if found_in_collab_db was True in the search response.
     '''
+    start_time = time.perf_counter()
+    endpoint = request.url.path
+    method = request.method
+    status_code = "200"
+    REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
+    SONG_NAME_LENGTH.observe(len(body.song_name))
+    ARTIST_NAME_LENGTH.observe(len(body.artist_name))
+
     try:
-        start_time = time.perf_counter()
-        endpoint = request.url.path
-        method = request.method
-        status_code = "200"
-        REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
-        SONG_NAME_LENGTH.observe(len(body.song_name))
-        ARTIST_NAME_LENGTH.observe(len(body.artist_name))
 
         s, a = body.song_name.lower(), body.artist_name.lower()
     
@@ -301,9 +303,6 @@ async def get_collab_recommendation(
         REQUEST_DURATION.labels(method=method,endpoint=endpoint).observe(time.perf_counter() - start_time)
         RESPONSE_STATUS.labels(method=method,endpoint=endpoint,status_code=status_code).inc()
 
-
-
-
 # ── 4. Hybrid ─────────────────────────────────────────────────────────────────
 
 @router.post(
@@ -318,14 +317,15 @@ async def get_hybrid_recommendation(
     _ = Depends(get_current_user),
     __ = Depends(recommend_rate_limiter)
 ):
+    start_time = time.perf_counter()
+    endpoint = request.url.path
+    method = request.method
+    status_code = "200"
+    REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
+    SONG_NAME_LENGTH.observe(len(body.song_name))
+    ARTIST_NAME_LENGTH.observe(len(body.artist_name))
+
     try:
-        start_time = time.perf_counter()
-        endpoint = request.url.path
-        method = request.method
-        status_code = "200"
-        REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
-        SONG_NAME_LENGTH.observe(len(body.song_name))
-        ARTIST_NAME_LENGTH.observe(len(body.artist_name))
 
         s, a = body.song_name.lower(), body.artist_name.lower()
 
@@ -407,3 +407,7 @@ async def get_hybrid_recommendation(
             filter_type="Hybrid Recommender System",
             recommendations=_df_to_songs(results),
         )
+    finally:
+        REQUEST_DURATION.labels(method=method,endpoint=endpoint).observe(time.perf_counter() - start_time)
+        RESPONSE_STATUS.labels(method=method,endpoint=endpoint,status_code=status_code).inc()
+
