@@ -7,7 +7,7 @@ from typing import Union
 
 FeatureMatrix = Union[np.ndarray, spmatrix]
 
-def collaborative_recommendation(
+async def collaborative_recommendation(
     song_name: str,
     artist_name: str,
     track_ids: np.ndarray,
@@ -97,7 +97,7 @@ def collaborative_recommendation(
         return top_k_songs
     
 
-def content_recommendation(
+async def content_recommendation(
     song_name: str,
     artist_name: str,
     songs_data: pd.DataFrame,

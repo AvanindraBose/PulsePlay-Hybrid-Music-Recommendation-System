@@ -12,7 +12,8 @@ class Settings:
     JWT_ALGORITHM = "HS256"
     REDIS_URL = os.getenv("REDIS_URL")
     MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
-    MODEL_NAME = "IrisRandomForest"
+    MODEL_NAME = "Pulse Play Recommednation Engine"
     DATABASE_URL = os.getenv("DATABASE_URL")
+    REDIS_TTL = os.getenv("REDIS_TTL")
 
 settings = Settings()

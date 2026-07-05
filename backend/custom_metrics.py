@@ -98,17 +98,17 @@ SEARCH_RESULTS = Counter(
 CACHE_HITS = Counter(
     name="cache_hits_total",
     documentation="Total number of cache hits",
-    labelnames=["endpoint"],
+    labelnames=["scope"],
 )
 
 CACHE_MISSES = Counter(
     name="cache_misses_total",
     documentation="Total number of cache misses",
-    labelnames=["endpoint"],
+    labelnames=["scope"],
 )
 
 CACHE_WRITES = Counter(
     name="cache_writes_total",
     documentation="Total number of cache writes",
-    labelnames=["endpoint"],
+    labelnames=["scope"],
 )

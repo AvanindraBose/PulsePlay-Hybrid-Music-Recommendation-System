@@ -19,6 +19,8 @@ from backend.custom_metrics import (
     SONG_NAME_LENGTH,
     ARTIST_NAME_LENGTH 
 )
+from backend.cached_recommendation.redis_cache_recommendation import get_cached_prediction,set_cached_prediction
+from backend.core.security import make_cache_key
 
 router = APIRouter(prefix="/api")
 
@@ -130,6 +132,7 @@ async def get_content_recommendation(
     endpoint = request.url.path
     method = request.method
     status_code = "200"
+    scope="content"
     REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
     SONG_NAME_LENGTH.observe(len(body.song_name))
     ARTIST_NAME_LENGTH.observe(len(body.artist_name))
@@ -149,8 +152,24 @@ async def get_content_recommendation(
         SEARCH_RESULTS.labels(status="found").inc()
         prediction_logger.save_logs(f"Generating Content recommendation for: {body.song_name} by {body.artist_name}")
 
+        # Song is Present in the Dataset, Now loking for cached Result
+        key_data = {
+            "type": scope,
+            "song_name": s,
+            "artist_name": a,
+            "k":body.k
+        }
+
+        key = make_cache_key(key_data)
+
+        cached_recommendation = await get_cached_prediction(key,scope=scope)
+
+        if cached_recommendation:
+            prediction_logger.save_logs(f"Retrieved cached prediction.", log_level="info")
+            return RecommendResponse(**cached_recommendation)
+
         inference_start = time.perf_counter()
-        results = content_recommendation(
+        results = await content_recommendation(
             song_name=s,
             artist_name=a,
             songs_data=request.app.state.songs_data,
@@ -195,12 +214,16 @@ async def get_content_recommendation(
         RECOMMENDATION_COUNTER.labels(recommendation_type="content").inc()
         RECOMMENDATION_RESULT_COUNT.observe(len(results))
 
-        return RecommendResponse(
+        response = RecommendResponse(
             song_name=body.song_name,
             artist_name=body.artist_name,
             filter_type="Content-Based Filtering",
             recommendations=_df_to_songs(results),
         )
+
+        await set_cached_prediction(key=key,value=response.model_dump(),scope=scope)
+
+        return response
     
     finally:
         REQUEST_DURATION.labels(method=method,endpoint=endpoint).observe(time.perf_counter() - start_time)
