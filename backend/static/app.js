@@ -35,6 +35,7 @@
   const state = {
     searchedSong: null,
     isLoading: false,
+    isRefreshingToken: false,
   };
 
   document.addEventListener("DOMContentLoaded", initRecommendationPage);
@@ -60,6 +61,9 @@
     elements.diversityInput.addEventListener("change", refetchWhenSongExists);
     elements.songInput.addEventListener("input", resetRecommendationState);
     elements.artistInput.addEventListener("input", resetRecommendationState);
+    if (elements.playSelectedSongButton) {
+      elements.playSelectedSongButton.addEventListener("click", handlePlaySelectedSong);
+    }
 
     handleDiversityInput();
     showEmptyState();
@@ -77,6 +81,7 @@
       artistInput: document.querySelector("[data-artist-input]"),
       countSelect: document.querySelector("[data-count-select]"),
       typeSelect: document.querySelector("[data-type-select]"),
+      typeInfo: document.querySelector("[data-type-info]"),
       diversityWrap: document.querySelector("[data-diversity-wrap]"),
       diversityInput: document.querySelector("[data-diversity-input]"),
       diversityValue: document.querySelector("[data-diversity-value]"),
@@ -86,6 +91,7 @@
       selectedSongTitle: document.querySelector("[data-selected-song-title]"),
       selectedSongArtist: document.querySelector("[data-selected-song-artist]"),
       selectedSongSources: document.querySelector("[data-selected-song-sources]"),
+      playSelectedSongButton: document.querySelector("[data-play-selected-song]"),
       player: document.querySelector("[data-player]"),
       playerTitle: document.querySelector("[data-player-title]"),
       playerArtist: document.querySelector("[data-player-artist]"),
@@ -181,6 +187,21 @@
         body: JSON.stringify(payload),
       });
 
+      // Extract preview URL for the selected song if it appears in recommendations
+      if (data && Array.isArray(data.recommendations)) {
+        const selectedSongInRecommendations = data.recommendations.find((song) => {
+          const sameName = String(song.song_name).toLowerCase() === String(state.searchedSong.song_name).toLowerCase();
+          const sameArtist = String(song.artist_name).toLowerCase() === String(state.searchedSong.artist_name).toLowerCase();
+          return sameName && sameArtist;
+        });
+        if (selectedSongInRecommendations && selectedSongInRecommendations.pulse_play_preview_url) {
+          state.searchedSong.pulse_play_preview_url = selectedSongInRecommendations.pulse_play_preview_url;
+          // Update the player with the preview URL
+          const elements = getElements();
+          elements.audioPlayer.src = selectedSongInRecommendations.pulse_play_preview_url;
+        }
+      }
+
       renderRecommendations(data, elements);
       showStatus("", "");
     } catch (error) {
@@ -195,8 +216,10 @@
    * Shared fetch helper for all API calls.
    * It parses JSON safely and turns backend error responses into normal
    * JavaScript Error objects, so calling functions can use one try/catch style.
+   * If a 401 error is received (token expired), it attempts to refresh the token
+   * and retry the request once.
    */
-  async function apiRequest(path, options) {
+  async function apiRequest(path, options, isRetry = false) {
     const response = await fetch(`${API_BASE}${path}`, {
       headers: { "Content-Type": "application/json" },
       ...options,
@@ -204,11 +227,64 @@
 
     const data = await parseJson(response);
 
+    // Handle unauthorized errors (token expired or invalid)
+    if (response.status === 401 && !isRetry) {
+      const errorDetail = data?.detail || "";
+      
+      // Only attempt refresh for token-related errors
+      if (errorDetail.includes("expired") || errorDetail.includes("token")) {
+        // Prevent multiple simultaneous refresh attempts
+        if (!state.isRefreshingToken) {
+          state.isRefreshingToken = true;
+          try {
+            // Attempt to refresh the token
+            const refreshSuccess = await refreshAccessToken();
+            state.isRefreshingToken = false;
+            
+            if (refreshSuccess) {
+              // Retry the original request with the new token
+              return apiRequest(path, options, true);
+            }
+          } catch (error) {
+            state.isRefreshingToken = false;
+          }
+        }
+      }
+    }
+
     if (!response.ok) {
       throw new Error(getErrorMessage(data, response.status));
     }
 
     return data;
+  }
+
+  /*
+   * Attempts to refresh the access token using the refresh token.
+   * Returns true if successful, false otherwise.
+   */
+  async function refreshAccessToken() {
+    try {
+      const refreshResponse = await fetch("/auth/refresh", {
+        method: "GET",
+        credentials: "include", // Include cookies
+      });
+
+      // If refresh succeeds, the new token will be set in the cookie
+      if (refreshResponse.ok) {
+        return true;
+      }
+      
+      // If refresh fails, redirect to login
+      if (refreshResponse.status === 303 || refreshResponse.status === 302) {
+        window.location.href = "/auth/login?session=expired";
+        return false;
+      }
+      
+      return false;
+    } catch (error) {
+      return false;
+    }
   }
 
   /*
@@ -272,9 +348,12 @@
    * Shows only recommendation types that the searched song can support.
    * Content works when the song exists in the content database. Collaborative
    * and hybrid need the collaborative database.
+   * Disabled options are kept visible with an explanatory message.
    */
   function configureAvailableTypes(searchResult, elements) {
     const currentValue = elements.typeSelect.value;
+    let hasDisabledOptions = false;
+    let disabledReason = "";
 
     Array.from(elements.typeSelect.options).forEach((option) => {
       const config = RECOMMENDERS[option.value];
@@ -284,9 +363,30 @@
           : searchResult.found_in_collab_db && config.requiresCollab;
 
       option.disabled = !isAvailable;
-      option.hidden = !isAvailable;
+      // Don't hide disabled options - keep them visible but disabled
+
+      if (!isAvailable) {
+        hasDisabledOptions = true;
+        if (option.value === "content") {
+          disabledReason = "Not found in Content Database.";
+        } else if (option.value === "collaborative") {
+          disabledReason = "Not found in Collaborative Database.";
+        } else if (option.value === "hybrid") {
+          disabledReason = "Not found in Collaborative Database (required for Hybrid).";
+        }
+      }
     });
 
+    // Show info message if there are disabled options
+    if (hasDisabledOptions && !searchResult.found_in_collab_db) {
+      elements.typeInfo.hidden = false;
+      elements.typeInfo.textContent =
+        "ℹ️ This song is only available in the Content Database. Collaborative and Hybrid filtering require the Collaborative Database.";
+    } else {
+      elements.typeInfo.hidden = true;
+    }
+
+    // Auto-switch if current selection is disabled
     if (!elements.typeSelect.querySelector(`option[value="${currentValue}"]:not(:disabled)`)) {
       elements.typeSelect.value = searchResult.found_in_collab_db ? "hybrid" : "content";
     }
@@ -365,6 +465,17 @@
     elements.selectedSongTitle.textContent = searchResult.song_name;
     elements.selectedSongArtist.textContent = searchResult.artist_name;
     elements.selectedSongSources.textContent = sources.join(" + ");
+
+    // Mirror the selected song in the player panel (right side)
+    elements.player.hidden = false;
+    elements.playerTitle.textContent = searchResult.song_name;
+    elements.playerArtist.textContent = searchResult.artist_name;
+    try {
+      elements.audioPlayer.removeAttribute("src");
+      elements.audioPlayer.load();
+    } catch (e) {
+      // ignore if audio element not ready
+    }
   }
 
   /*
@@ -379,11 +490,27 @@
       return;
     }
 
-    elements.resultsTitle.textContent = `${data.recommendations.length} ${data.filter_type} recommendations`;
+    // Filter out the currently selected song (if any) so it does not appear
+    // in the recommendation list
+    const filtered = data.recommendations.filter((song) => {
+      if (!state.searchedSong) return true;
+      try {
+        const sameName = String(song.song_name).toLowerCase() === String(state.searchedSong.song_name).toLowerCase();
+        const sameArtist = String(song.artist_name).toLowerCase() === String(state.searchedSong.artist_name).toLowerCase();
+        return !(sameName && sameArtist);
+      } catch (e) {
+        return true;
+      }
+    });
 
-    data.recommendations.forEach((song, index) => {
+    elements.resultsTitle.textContent = `${filtered.length} ${data.filter_type} recommendations`;
+
+    filtered.forEach((song, index) => {
       const item = document.createElement("li");
       item.className = "recommendation-item";
+
+      const left = document.createElement("div");
+      left.className = "recommendation-left";
 
       const rank = document.createElement("span");
       rank.className = "recommendation-rank";
@@ -399,7 +526,7 @@
       artist.textContent = song.artist_name;
 
       details.append(title, artist);
-      item.append(rank, details);
+      left.append(rank, details);
 
       const preview = document.createElement("button");
       preview.className = "recommendation-preview";
@@ -410,7 +537,7 @@
         playPreview(song, elements);
       });
 
-      item.appendChild(preview);
+      item.append(left, preview);
 
       elements.resultsList.appendChild(item);
     });
@@ -436,13 +563,29 @@
   }
 
   /*
+   * Plays the originally selected song when the user clicks the play button
+   * in the selected song card.
+   */
+  function handlePlaySelectedSong() {
+    if (!state.searchedSong || !state.searchedSong.pulse_play_preview_url) {
+      showStatus("No preview is available for this song.", "error");
+      return;
+    }
+
+    const elements = getElements();
+    playPreview(state.searchedSong, elements);
+  }
+
+  /*
    * Sets the page back to its initial results state.
    */
   function showEmptyState() {
     const elements = getElements();
 
     elements.selectedSong.hidden = true;
-    elements.player.hidden = true;
+    elements.player.hidden = false;
+    elements.playerTitle.textContent = "Pick a recommendation";
+    elements.playerArtist.textContent = "Preview audio appears here as soon as you choose a track.";
     elements.audioPlayer.removeAttribute("src");
     elements.audioPlayer.load();
     elements.resultsTitle.textContent = "Search for a song to begin";

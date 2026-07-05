@@ -72,6 +72,7 @@
                   <option value="collaborative">Collaborative</option>
                   <option value="hybrid" selected>Hybrid</option>
                 </select>
+                <p class="type-info-message" data-type-info hidden></p>
               </div>
 
               <div class="form-group">
@@ -114,10 +115,17 @@
         </section>
 
         <section class="player-panel">
-          <div class="player-art" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"></path>
-            </svg>
+          <div class="player-panel__header">
+            <div class="player-art" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"></path>
+              </svg>
+            </div>
+            <div class="player-hero-copy">
+              <p class="result-label">Listening now</p>
+              <h2>Preview your next favorite</h2>
+              <p>Search a song, choose a mode, and preview recommendations instantly.</p>
+            </div>
           </div>
 
           <div class="selected-song" data-selected-song hidden>
@@ -125,12 +133,13 @@
             <h2 data-selected-song-title></h2>
             <p data-selected-song-artist></p>
             <span data-selected-song-sources></span>
+            <button class="recommendation-preview" type="button" data-play-selected-song>Play</button>
           </div>
 
-          <div class="now-playing" data-player hidden>
+          <div class="now-playing" data-player>
             <p class="result-label">Now playing</p>
-            <h2 data-player-title>Select a recommendation</h2>
-            <p data-player-artist>Preview audio will play here.</p>
+            <h2 data-player-title>Pick a recommendation</h2>
+            <p data-player-artist>Preview audio appears here as soon as you choose a track.</p>
             <audio controls data-audio-player></audio>
           </div>
         </section>
