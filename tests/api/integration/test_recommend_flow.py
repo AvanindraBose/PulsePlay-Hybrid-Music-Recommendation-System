@@ -1,3 +1,13 @@
+import os
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("CI", "").lower() not in {"1", "true", "yes"},
+    reason="Integration tests are intended for CI execution only",
+)
+
+
 async def login_test_user(client):
     signup_response = await client.post(
         "/auth/signup",

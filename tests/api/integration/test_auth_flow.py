@@ -1,8 +1,16 @@
+import os
+
+import pytest
 from sqlalchemy import select
 
 from backend.core.database import AsyncSessionLocal
 from backend.db.refresh_token import RefreshToken
 from backend.db.users import User
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("CI", "").lower() not in {"1", "true", "yes"},
+    reason="Integration tests are intended for CI execution only",
+)
 
 
 async def test_dashboard_redirects_to_login_without_session(integration_async_client):

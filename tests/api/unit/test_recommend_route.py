@@ -25,11 +25,11 @@ async def test_song_search_returns_404_for_unknown_song(async_client):
     )
 
     assert response.status_code == 404
-    assert "was not found" in response.json()["detail"]
+    assert "not in our Application" in response.json()["detail"]
 
 
 async def test_content_recommendation_returns_songs(async_client, monkeypatch):
-    def fake_content_recommendation(**_kwargs):
+    async def fake_content_recommendation(**_kwargs):
         return pd.DataFrame(
             [
                 {

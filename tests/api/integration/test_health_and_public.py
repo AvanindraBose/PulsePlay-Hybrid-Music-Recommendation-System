@@ -1,3 +1,13 @@
+import os
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("CI", "").lower() not in {"1", "true", "yes"},
+    reason="Integration tests are intended for CI execution only",
+)
+
+
 async def test_health_check_loads(integration_async_client):
     response = await integration_async_client.get("/internal/health")
 
