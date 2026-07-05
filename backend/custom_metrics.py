@@ -21,9 +21,23 @@ REQUEST_ERRORS = Counter(
     documentation="Count of failed HTTP requests by endpoint and error type",
     labelnames=["method", "endpoint", "error_type"],
 )
+# Expected error_type values in routes:
+# - validation_error
+# - db_error
+# - rate_limited
+# - service_unavailable
+# - invalid_credentials
+# - token_error
+# - not_found
+# - server_error
+# - http_error
+# These values are meant to normalize auth and recommendation failure categories.
 
-# Keeping this either 200 or 500 and reducing the cardinality.
-# Main purpose of this metric is to tell how much our application is giving 200 responses vs 500
+
+# Expected status_code values:
+# - "200" for successful endpoints
+# - "500" for internal server error paths
+# - other stringified HTTP status codes may appear when redirects or auth failures are reported
 RESPONSE_STATUS = Counter(
     name="http_response_status_total",
     documentation="HTTP response status codes emitted by the API",

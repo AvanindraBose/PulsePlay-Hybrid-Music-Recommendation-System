@@ -22,6 +22,17 @@ from backend.custom_metrics import (
 
 router = APIRouter(prefix="/api")
 
+ERROR_TYPE_MAP = {
+    404: "not_found",
+    500: "server_error",
+}
+
+
+def _normalize_recommendation_error_type(exc: Exception, status_code: str) -> str:
+    if isinstance(exc, HTTPException):
+        return ERROR_TYPE_MAP.get(int(status_code), "http_error")
+    return "server_error"
+
 
 @router.get(
 "/song/search",
@@ -57,7 +68,7 @@ async def get_song(
         if not in_content and not in_collab:
 
             prediction_logger.save_logs(f"Song not found: {song_name} by {artist_name}")
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="missing_song").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="not_found").inc()
             SEARCH_RESULTS.labels(status="not found").inc()
 
             raise HTTPException(
@@ -66,14 +77,20 @@ async def get_song(
             )
         
         SEARCH_RESULTS.labels(status="found").inc()
-        
+        prediction_logger.save_logs(f"Song found: {song_name} by {artist_name}")
+        return SearchResponse(
+            song_name=song_name,
+            artist_name=artist_name,
+            found_in_content_db=in_content,
+            found_in_collab_db=in_collab,
+        )
     except HTTPException as exc:
         status_code = str(exc.status_code)
 
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__,
+            error_type=_normalize_recommendation_error_type(exc, status_code),
         ).inc()
 
         prediction_logger.save_logs(f"HTTP Exception: {exc.detail}",log_level="warning")
@@ -82,29 +99,12 @@ async def get_song(
 
     except Exception as exc:
 
-        status_code = "500"
+        status_code = str(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__).inc()
-
-        prediction_logger.save_logs(f"Unexpected recommendation error: {exc}",log_level="error",)
-
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal Server Error"
-        )
-    
-    else:
-        prediction_logger.save_logs(f"Song found: {song_name} by {artist_name}")
-        return SearchResponse(
-            song_name=song_name,
-            artist_name=artist_name,
-            found_in_content_db=in_content,
-            found_in_collab_db=in_collab,
-        )
-    
+            error_type=_normalize_recommendation_error_type(exc, status_code)).inc()
     finally:
         REQUEST_DURATION.labels(method=method,endpoint=endpoint).observe(time.perf_counter() - start_time)
         RESPONSE_STATUS.labels(method=method,endpoint=endpoint,status_code=status_code).inc()
@@ -165,7 +165,7 @@ async def get_content_recommendation(
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__,
+            error_type=_normalize_recommendation_error_type(exc, status_code),
         ).inc()
 
         prediction_logger.save_logs(f"HTTP Exception: {exc.detail}",log_level="warning")
@@ -174,12 +174,12 @@ async def get_content_recommendation(
 
     except Exception as exc:
 
-        status_code = "500"
+        status_code = str(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__).inc()
+            error_type=_normalize_recommendation_error_type(exc, status_code)).inc()
 
         prediction_logger.save_logs(f"Unexpected recommendation error: {exc}",log_level="error",)
 
@@ -263,7 +263,7 @@ async def get_collab_recommendation(
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__,
+            error_type=_normalize_recommendation_error_type(exc, status_code),
         ).inc()
 
         prediction_logger.save_logs(f"HTTP Exception: {exc.detail}",log_level="warning")
@@ -272,12 +272,12 @@ async def get_collab_recommendation(
 
     except Exception as exc:
 
-        status_code = "500"
+        status_code = str(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__).inc()
+            error_type=_normalize_recommendation_error_type(exc, status_code)).inc()
 
         prediction_logger.save_logs(f"Unexpected recommendation error: {exc}",log_level="error",)
 
@@ -370,7 +370,7 @@ async def get_hybrid_recommendation(
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__,
+            error_type=_normalize_recommendation_error_type(exc, status_code),
         ).inc()
 
         prediction_logger.save_logs(f"HTTP Exception: {exc.detail}",log_level="warning")
@@ -379,12 +379,12 @@ async def get_hybrid_recommendation(
 
     except Exception as exc:
 
-        status_code = "500"
+        status_code = str(status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         REQUEST_ERRORS.labels(
             method=method,
             endpoint=endpoint,
-            error_type=exc.__class__.__name__).inc()
+            error_type=_normalize_recommendation_error_type(exc, status_code)).inc()
 
         prediction_logger.save_logs(f"Unexpected recommendation error: {exc}",log_level="error",)
 

@@ -35,6 +35,20 @@ templates = Jinja2Templates(directory="backend/templates")
 ACCESS_COOKIE_NAME = "access_token"
 REFRESH_COOKIE_NAME = "refresh_token"
 
+ERROR_TYPE_MAP = {
+    "email_exists": "validation_error",
+    "redis_unavailable": "service_unavailable",
+    "missing_refresh_token": "token_error",
+    "invalid_refresh_token": "token_error",
+    "token_not_found": "token_error",
+    "expired_refresh_token": "token_error",
+    "token_refresh_error": "token_error",
+}
+
+
+def _normalize_error_type(error_type: str) -> str:
+    return ERROR_TYPE_MAP.get(error_type, error_type)
+
 
 def _record_request_metrics(method: str, endpoint: str, status_code: str, start_time: float) -> None:
     REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(time.perf_counter() - start_time)
@@ -129,7 +143,7 @@ async def signup(request: Request,
 
         if existing_user:
             status_code = str(status.HTTP_400_BAD_REQUEST)
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="email_exists").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("email_exists")).inc()
             auth_logger.save_logs("User Creation Failed - Email already exists", log_level="error")
             return templates.TemplateResponse(
                 request=request,
@@ -194,7 +208,7 @@ async def login(request: Request,
 
         if _ == "redis_unavailable":
             status_code = str(status.HTTP_503_SERVICE_UNAVAILABLE)
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="redis_unavailable").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("redis_unavailable")).inc()
             return templates.TemplateResponse(
                 request=request,
                 name="login.html",
@@ -333,7 +347,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
 
         if _ == "redis_unavailable":
             status_code = str(status.HTTP_303_SEE_OTHER)
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="redis_unavailable").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("redis_unavailable")).inc()
             return RedirectResponse(
                 url="/auth/login?refresh=service_unavailable",
                 status_code=status.HTTP_303_SEE_OTHER,
@@ -346,7 +360,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
 
         if not refresh_token:
             status_code = str(status.HTTP_303_SEE_OTHER)
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="missing_refresh_token").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("missing_refresh_token")).inc()
             auth_logger.save_logs("Token Refresh Failed - No refresh token provided", log_level="error")
             return RedirectResponse(
                 url="/auth/login?session=expired",
@@ -358,7 +372,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
 
         if payload is None:
             status_code = str(status.HTTP_303_SEE_OTHER)
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="invalid_refresh_token").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("invalid_refresh_token")).inc()
             auth_logger.save_logs("Token Refresh Failed - Invalid or expired refresh token", log_level="error")
             response = RedirectResponse(
                 url="/auth/login?session=expired",
@@ -380,7 +394,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
 
             if not db_token:
                 status_code = str(status.HTTP_303_SEE_OTHER)
-                REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="token_not_found").inc()
+                REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("token_not_found")).inc()
                 auth_logger.save_logs("Token Refresh Failed - No token found in DB for user", log_level="error")
                 response = RedirectResponse(
                     url="/auth/login?session=expired",
@@ -398,7 +412,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
 
             if not is_valid_token:
                 status_code = str(status.HTTP_303_SEE_OTHER)
-                REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="invalid_refresh_token").inc()
+                REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("invalid_refresh_token")).inc()
                 auth_logger.save_logs("Token Refresh Failed - Refresh token does not match DB record", log_level="error")
                 response = RedirectResponse(
                     url="/auth/login?session=expired",
@@ -410,7 +424,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
 
             if db_token.expires_at < datetime.now(timezone.utc):
                 status_code = str(status.HTTP_303_SEE_OTHER)
-                REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="expired_refresh_token").inc()
+                REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("expired_refresh_token")).inc()
                 auth_logger.save_logs("Token Refresh Failed - Refresh token expired for user", log_level="error")
                 response = RedirectResponse(
                     url="/auth/login?session=expired",
@@ -433,7 +447,7 @@ async def refresh_access_tokens(request: Request, db: AsyncSession = Depends(get
         except Exception:
             await db.rollback()
             status_code = str(status.HTTP_303_SEE_OTHER)
-            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type="token_refresh_error").inc()
+            REQUEST_ERRORS.labels(method=method, endpoint=endpoint, error_type=_normalize_error_type("token_refresh_error")).inc()
             return RedirectResponse(
                 url="/auth/login?session=expired",
                 status_code=status.HTTP_303_SEE_OTHER,
