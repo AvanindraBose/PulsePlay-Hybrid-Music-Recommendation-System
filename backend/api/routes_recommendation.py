@@ -165,7 +165,7 @@ async def get_content_recommendation(
         cached_recommendation = await get_cached_prediction(key,scope=scope)
 
         if cached_recommendation:
-            prediction_logger.save_logs(f"Retrieved cached prediction.", log_level="info")
+            prediction_logger.save_logs(f"Retrieved cached recommendation.", log_level="info")
             return RecommendResponse(**cached_recommendation)
 
         inference_start = time.perf_counter()
@@ -250,6 +250,7 @@ async def get_collab_recommendation(
     endpoint = request.url.path
     method = request.method
     status_code = "200"
+    scope = "collab"
     REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
     SONG_NAME_LENGTH.observe(len(body.song_name))
     ARTIST_NAME_LENGTH.observe(len(body.artist_name))
@@ -266,12 +267,28 @@ async def get_collab_recommendation(
             )
         
         SEARCH_RESULTS.labels(status="found").inc()
+
+        # Song is Present in the Dataset, Now loking for cached Result
+        key_data = {
+            "type": scope,
+            "song_name": s,
+            "artist_name": a,
+            "k":body.k
+        }
+
+        key = make_cache_key(key_data)
+
+        cached_recommendation = await get_cached_prediction(key,scope=scope)
+
+        if cached_recommendation:
+            prediction_logger.save_logs(f"Retrieved cached recommendation.", log_level="info")
+            return RecommendResponse(**cached_recommendation)
     
         prediction_logger.save_logs(f"Generating Collaborative recommendation for : {body.song_name} by {body.artist_name}")
 
         inference_start = time.perf_counter()
 
-        results = collaborative_recommendation(
+        results = await collaborative_recommendation(
             song_name=s,
             artist_name=a,
             track_ids=request.app.state.track_ids,
@@ -316,12 +333,16 @@ async def get_collab_recommendation(
         RECOMMENDATION_COUNTER.labels(recommendation_type="collaborative").inc()
         RECOMMENDATION_RESULT_COUNT.observe(len(results))
 
-        return RecommendResponse(
+        response = RecommendResponse(
             song_name=body.song_name,
             artist_name=body.artist_name,
             filter_type="Collaborative Filtering",
             recommendations=_df_to_songs(results),
         )
+
+        await set_cached_prediction(key=key,value=response.model_dump(),scope=scope)
+
+        return response
     finally:
         REQUEST_DURATION.labels(method=method,endpoint=endpoint).observe(time.perf_counter() - start_time)
         RESPONSE_STATUS.labels(method=method,endpoint=endpoint,status_code=status_code).inc()
