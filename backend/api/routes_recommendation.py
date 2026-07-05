@@ -365,6 +365,7 @@ async def get_hybrid_recommendation(
     endpoint = request.url.path
     method = request.method
     status_code = "200"
+    scope="hybrid"
     REQUEST_COUNT.labels(method=method,endpoint=endpoint).inc()
     SONG_NAME_LENGTH.observe(len(body.song_name))
     ARTIST_NAME_LENGTH.observe(len(body.artist_name))
@@ -384,6 +385,24 @@ async def get_hybrid_recommendation(
         SEARCH_RESULTS.labels(status="found").inc()
 
         content_weight = 1 - (body.diversity / 10)
+
+         # Song is Present in the Dataset, Now loking for cached Result
+        key_data = {
+            "type": scope,
+            "song_name": s,
+            "artist_name": a,
+            "k":body.k,
+            "diversity":body.diversity
+        }
+
+        key = make_cache_key(key_data)
+
+        cached_recommendation = await get_cached_prediction(key,scope=scope)
+
+        if cached_recommendation:
+            prediction_logger.save_logs(f"Retrieved cached recommendation.", log_level="info")
+            return RecommendResponse(**cached_recommendation)
+
     
         prediction_logger.save_logs(
             f"Generating Hybrid recommendation for : {body.song_name} by {body.artist_name} "
@@ -445,12 +464,17 @@ async def get_hybrid_recommendation(
         RECOMMENDATION_COUNTER.labels(recommendation_type="hybrid").inc()
         RECOMMENDATION_RESULT_COUNT.observe(len(results))
 
-        return RecommendResponse(
+        response = RecommendResponse(
             song_name=body.song_name,
             artist_name=body.artist_name,
             filter_type="Hybrid Recommender System",
             recommendations=_df_to_songs(results),
         )
+
+        await set_cached_prediction(key=key,value=response,scope=scope)
+
+        return response
+    
     finally:
         REQUEST_DURATION.labels(method=method,endpoint=endpoint).observe(time.perf_counter() - start_time)
         RESPONSE_STATUS.labels(method=method,endpoint=endpoint,status_code=status_code).inc()
