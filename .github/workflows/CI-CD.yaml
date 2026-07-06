@@ -295,14 +295,14 @@ jobs:
   dockerizing-api:
     needs:
       - changes
+      - ml-pipeline
       - post-pipeline-api-checks
     if: always() && 
         (github.event_name == 'push') &&
         (github.ref == 'refs/heads/main') && 
-        (
-          needs.post-pipeline-api-checks.result == 'success' || 
-          needs.changes.outputs.container == 'true'
-        )
+        (needs.ml-pipeline.result == 'success') &&
+        (needs.post-pipeline-api-checks.result == 'success' || 
+         needs.changes.outputs.container == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: checkout code
