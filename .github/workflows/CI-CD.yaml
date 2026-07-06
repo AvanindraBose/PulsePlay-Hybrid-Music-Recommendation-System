@@ -292,18 +292,25 @@ jobs:
           name: api-test-logs
           path: logs/
 
-  dockerizing-api:
+  deploy-image-ecr:
     needs:
-      - changes
       - ml-pipeline
       - post-pipeline-api-checks
     if: always() && 
         (github.event_name == 'push') &&
         (github.ref == 'refs/heads/main') && 
         (needs.ml-pipeline.result == 'success') &&
-        (needs.post-pipeline-api-checks.result == 'success' || 
-         needs.changes.outputs.container == 'true')
+        (needs.post-pipeline-api-checks.result == 'success')
     runs-on: ubuntu-latest
+    
+    env:
+      AWS_DOCKER_ACCESS_KEY_ID: ${{ secrets.AWS_DOCKER_ACCESS_KEY_ID }}
+      AWS_DOCKER_SECRET_ACCESS_KEY: ${{ secrets.AWS_DOCKER_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      DEPLOYMENT_S3_BUCKET: ${{ secrets.DEPLOYMENT_S3_BUCKET }}
+
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -314,36 +321,123 @@ jobs:
             name: dvc-outputs
             path: .
 
-      - name: login to docker
-        if: success()
-        uses: docker/login-action@v3
+      # - name: login to docker
+      #   if: success()
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+      # - name: Build Docker Image
+      #   if: success()
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:${{ github.sha }} \
+      #                  -t ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:latest .
+      
+      # - name: Push Docker Image to DockerHub
+      #   if: success()
+      #   run: |
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:${{ github.sha }}
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:latest
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          aws-access-key-id: ${{ env.AWS_DOCKER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_DOCKER_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
       
-      - name: Build Docker Image
+      - name: login to aws ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: create deployment env file
+        env:
+          JWT_ACCESS_SECRET_KEY: ${{ secrets.JWT_ACCESS_SECRET_KEY }}
+          JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY }}
+          REDIS_URL: ${{ secrets.AWS_REDIS_URL }}
+          DATABASE_URL: ${{ secrets.AWS_RDS_URL }}
+          LOGIN_RATE_LIMIT: ${{ secrets.LOGIN_RATE_LIMIT}}
+          LOGIN_RATE_WINDOW: ${{ secrets.LOGIN_RATE_WINDOW}}
+          REFRESH_RATE_LIMIT: ${{ secrets.REFRESH_RATE_LIMIT}}
+          REFRESH_RATE_WINDOW: ${{ secrets.REFRESH_RATE_WINDOW}}
+          PREDICT_RATE_LIMIT: ${{ secrets.PREDICT_RATE_LIMIT}}
+          PREDICT_RATE_WINDOW: ${{ secrets.PREDICT_RATE_WINDOW}}
+          ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
+          REFRESH_TOKEN_EXPIRE_DAYS: ${{ secrets.REFRESH_TOKEN_EXPIRE_DAYS }}
+          REDIS_TTL: ${{ secrets.REDIS_TTL}}
+          REDIS_ADDR: ${{ secrets.AWS_REDIS_ADDR }}
+        run: |
+          required_vars=(
+            JWT_ACCESS_SECRET_KEY
+            JWT_REFRESH_SECRET_KEY
+            REDIS_URL
+            DATABASE_URL
+            LOGIN_RATE_LIMIT
+            LOGIN_RATE_WINDOW
+            REFRESH_RATE_LIMIT
+            REFRESH_RATE_WINDOW
+            PREDICT_RATE_LIMIT
+            PREDICT_RATE_WINDOW
+            ACCESS_TOKEN_EXPIRE_MINUTES
+            REFRESH_TOKEN_EXPIRE_DAYS
+            REDIS_TTL
+            REDIS_ADDR
+          )
+
+          for var_name in "${required_vars[@]}"; do
+            if [ -z "${!var_name}" ]; then
+              echo "Missing required GitHub Secret: ${var_name}"
+              exit 1
+            fi
+          done
+
+          {
+            echo "JWT_ACCESS_SECRET_KEY=${JWT_ACCESS_SECRET_KEY}"
+            echo "JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY}"
+            echo "REDIS_URL=${REDIS_URL}"
+            echo "DATABASE_URL=${DATABASE_URL}"
+            echo "LOGIN_RATE_LIMIT=${LOGIN_RATE_LIMIT}"
+            echo "LOGIN_RATE_WINDOW=${LOGIN_RATE_WINDOW}"
+            echo "REFRESH_RATE_LIMIT=${REFRESH_RATE_LIMIT}"
+            echo "REFRESH_RATE_WINDOW=${REFRESH_RATE_WINDOW}"
+            echo "PREDICT_RATE_LIMIT=${PREDICT_RATE_LIMIT}"
+            echo "PREDICT_RATE_WINDOW=${PREDICT_RATE_WINDOW}"
+            echo "ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}"
+            echo "REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}"
+            echo "REDIS_TTL=${REDIS_TTL}"
+            echo "REDIS_ADDR=${REDIS_ADDR}"
+          } > .env
+
+      - name: upload deployment files to s3
+        run: |
+          aws s3 cp docker-compose.yaml "s3://${DEPLOYMENT_S3_BUCKET}/docker-compose.yaml"
+          aws s3 cp .env "s3://${DEPLOYMENT_S3_BUCKET}/.env"
+
+      - name: build docker image
         if: success()
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:${{ github.sha }} \
-                       -t ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:latest .
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}"
+          docker build \
+            -t "${IMAGE_URI}:${{ github.sha }}" \
+            -t "${IMAGE_URI}:latest" .
       
-      - name: Push Docker Image to DockerHub
-        if: success()
+      - name: push docker image to AWS ECR
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/twitter-sentiment-analysis-api:latest
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}"
+          docker push "${IMAGE_URI}:${GITHUB_SHA}"
+          docker push "${IMAGE_URI}:latest" 
 
   pushing-dvc-artifacts:
     needs: 
         - ml-pipeline
         - post-pipeline-api-checks
-        - dockerizing-api
+        - deploy-image-ecr
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       needs.ml-pipeline.result == 'success' &&
       needs.post-pipeline-api-checks.result == 'success' &&
-      needs.dockerizing-api.result == 'success'
+      needs.deploy-image-ecr.result == 'success'
 
     runs-on: 'ubuntu-latest'
 
