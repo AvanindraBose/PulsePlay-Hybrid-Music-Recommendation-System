@@ -41,8 +41,9 @@ def interaction_matrix():
 
 
 
-def test_content_recommendation_returns_song_rows(songs_data, feature_matrix):
-    result = content_recommendation(
+@pytest.mark.asyncio
+async def test_content_recommendation_returns_song_rows(songs_data, feature_matrix):
+    result = await content_recommendation(
         song_name="Blinding Lights",
         artist_name="The Weeknd",
         songs_data=songs_data,
@@ -54,8 +55,9 @@ def test_content_recommendation_returns_song_rows(songs_data, feature_matrix):
     assert {"name", "artist"}.issubset(result.columns)
 
 
-def test_collaborative_recommendation_returns_song_rows(songs_data, interaction_matrix):
-    result = collaborative_recommendation(
+@pytest.mark.asyncio
+async def test_collaborative_recommendation_returns_song_rows(songs_data, interaction_matrix):
+    result = await collaborative_recommendation(
         song_name="Blinding Lights",
         artist_name="The Weeknd",
         track_ids=np.array(["t1", "t2", "t3"]),
@@ -68,9 +70,10 @@ def test_collaborative_recommendation_returns_song_rows(songs_data, interaction_
     assert {"name", "artist"}.issubset(result.columns)
 
 
-def test_recommendation_functions_raise_for_unknown_song(songs_data, feature_matrix):
+@pytest.mark.asyncio
+async def test_recommendation_functions_raise_for_unknown_song(songs_data, feature_matrix):
     with pytest.raises(ValueError, match="Song not found"):
-        content_recommendation(
+        await content_recommendation(
             song_name="Unknown Song",
             artist_name="Unknown Artist",
             songs_data=songs_data,
