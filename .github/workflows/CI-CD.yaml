@@ -410,8 +410,8 @@ jobs:
 
       - name: upload deployment files to s3
         run: |
-          aws s3 cp docker-compose.yaml "${DEPLOYMENT_S3_BUCKET}/docker-compose.yaml"
-          aws s3 cp .env "${DEPLOYMENT_S3_BUCKET}/.env"
+          aws s3 cp docker-compose.yaml "${env.DEPLOYMENT_S3_BUCKET}/docker-compose.yaml"
+          aws s3 cp .env "${env.DEPLOYMENT_S3_BUCKET}/.env"
 
       - name: build docker image
         if: success()
