@@ -176,6 +176,7 @@ def create_interaction_matrix(
 
     else:
         collab_logger.save_logs(f"Successfully Created and Saved Sparse Matrix",log_level="info")
+
     
 
 def get_unique_track_ids(df:dd.DataFrame) -> list:
