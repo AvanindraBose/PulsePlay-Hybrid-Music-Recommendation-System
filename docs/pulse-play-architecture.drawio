@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" pages="2">
+  <diagram name="ML Training Pipeline" id="pulse-play-training">
+    <mxGraphModel dx="1900" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="950" background="#0B1120" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title-train" value="Pulse Play" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#F8FAFC;fontSize=30;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="710" y="35" width="280" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle-train" value="ML Training Pipeline Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#A7B4C8;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="650" y="85" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-train" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#172033;gradientDirection=south;strokeColor=#334155;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="120" y="210" width="1460" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-label-train" value="DVC ML Pipeline" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#E5E7EB;fontSize=14;fontStyle=1;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="132" y="390" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s3-train" value="Amazon S3&#xa;DVC Remote&#xa;Raw Songs + User History" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="25" y="380" width="145" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="dvc-train" value="DVC&#xa;Pipeline Orchestration&#xa;Data + Artifact Versioning" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5B1A1A;gradientColor=#991B1B;gradientDirection=south;strokeColor=#F87171;fontColor=#FFF1F2;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="380" width="165" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="raw-train" value="Raw Data&#xa;songs-info.csv&#xa;user-info.csv" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#14532D;gradientColor=#166534;gradientDirection=south;strokeColor=#86EFAC;fontColor=#DCFCE7;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="455" y="380" width="150" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="clean-train" value="Data Cleaning&#xa;Deduplicate + Normalize&#xa;Create Two Catalogs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123A5C;gradientColor=#075985;gradientDirection=south;strokeColor=#38BDF8;fontColor=#E0F2FE;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="675" y="380" width="170" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="content-data-train" value="Content Catalog&#xa;Feature-ready Songs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A8A;gradientColor=#1D4ED8;gradientDirection=south;strokeColor=#93C5FD;fontColor=#EFF6FF;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="925" y="250" width="165" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="collab-data-train" value="Collaborative Catalog&#xa;+ User Listening History" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A8A;gradientColor=#1D4ED8;gradientDirection=south;strokeColor=#93C5FD;fontColor=#EFF6FF;fontSize=12;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="925" y="530" width="165" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="content-train" value="Content Feature Pipeline&#xa;TF-IDF + Encoders&#xa;Audio Feature Scaling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123A5C;gradientColor=#075985;gradientDirection=south;strokeColor=#38BDF8;fontColor=#E0F2FE;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="250" width="190" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="collab-train" value="Collaborative Pipeline&#xa;Dask Processing&#xa;Track-User Matrix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123A5C;gradientColor=#075985;gradientDirection=south;strokeColor=#38BDF8;fontColor=#E0F2FE;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="510" width="190" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="hybrid-train" value="Hybrid Feature Alignment&#xa;Filtered Catalog&#xa;+ Reused Content Transformer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4C1D95;gradientColor=#7C3AED;gradientDirection=south;strokeColor=#C4B5FD;fontColor=#F5F3FF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="380" width="210" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="artifacts-train" value="Versioned ML Artifacts&#xa;Transformer, Sparse Matrices&#xa;Filtered Catalog, Track Indexes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#713F12;gradientColor=#B45309;gradientDirection=south;strokeColor=#FBBF24;fontColor=#FEF3C7;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1450" y="380" width="195" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr-train" value="AWS ECR&#xa;Inference Image&#xa;Ships Artifacts with API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1450" y="690" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="note-train" value="Important dependency: the hybrid artifact is not trained as a separate standalone model. The collaborative branch first narrows the catalog using user history, then the content transformer is applied to that filtered catalog." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#1E293B;gradientDirection=south;strokeColor=#64748B;fontColor=#CBD5E1;fontSize=13;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="710" width="640" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="s3-train" target="dvc-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="dvc-train" target="raw-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="raw-train" target="clean-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="clean-train" target="content-data-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="clean-train" target="collab-data-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="content-data-train" target="content-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="collab-data-train" target="collab-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="content-train" target="hybrid-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="collab-train" target="hybrid-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="hybrid-train" target="artifacts-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#94A3B8;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="artifacts-train" target="ecr-train"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="ML Inference Pipeline" id="pulse-play-inference">
+    <mxGraphModel dx="1900" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="950" background="#0B1120" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title-inf" value="Pulse Play" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#F8FAFC;fontSize=30;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="710" y="35" width="280" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle-inf" value="ML Inference Pipeline Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#A7B4C8;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="650" y="85" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-inf" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#172033;gradientDirection=south;strokeColor=#334155;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="120" y="210" width="1460" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-label-inf" value="Serving Pipeline" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#E5E7EB;fontSize=14;fontStyle=1;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="132" y="390" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="user-inf" value="User&#xa;Browser Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="25" y="380" width="145" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="alb-inf" value="AWS ALB / API Gateway&#xa;TLS + Public Routing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="380" width="170" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="fastapi-inf" value="FastAPI Recommender API&#xa;ECS/Fargate Container&#xa;Image from AWS ECR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123A5C;gradientColor=#075985;gradientDirection=south;strokeColor=#38BDF8;fontColor=#E0F2FE;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="380" width="205" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="auth-inf" value="Auth Layer&#xa;JWT Cookies&#xa;Refresh Token Flow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4C1D95;gradientColor=#7C3AED;gradientDirection=south;strokeColor=#C4B5FD;fontColor=#F5F3FF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="745" y="250" width="175" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-inf" value="Amazon RDS PostgreSQL&#xa;Users + Refresh Tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A8A;gradientColor=#1D4ED8;gradientDirection=south;strokeColor=#93C5FD;fontColor=#EFF6FF;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="250" width="190" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="redis-inf" value="ElastiCache Redis&#xa;Recommendation Cache&#xa;Rate Limiting Counters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5B1A1A;gradientColor=#991B1B;gradientDirection=south;strokeColor=#F87171;fontColor=#FFF1F2;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="745" y="510" width="190" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="artifact-inf" value="In-memory ML Artifacts&#xa;Content Matrix&#xa;Interaction Matrix&#xa;Hybrid Matrix + Track Indexes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#713F12;gradientColor=#B45309;gradientDirection=south;strokeColor=#FBBF24;fontColor=#FEF3C7;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="970" y="510" width="200" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="engine-inf" value="Recommendation Engine&#xa;Search Availability&#xa;Content / Collaborative / Hybrid Scoring" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123A5C;gradientColor=#075985;gradientDirection=south;strokeColor=#38BDF8;fontColor=#E0F2FE;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1235" y="380" width="225" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="response-inf" value="Ranked Recommendations&#xa;Song, Artist&#xa;Preview URL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#14532D;gradientColor=#166534;gradientDirection=south;strokeColor=#86EFAC;fontColor=#DCFCE7;fontSize=13;fontStyle=1;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1515" y="380" width="160" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="obs-inf" value="Observability&#xa;Prometheus /metrics&#xa;Redis Exporter&#xa;Logs to CloudWatch or Grafana Stack" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#1E293B;gradientDirection=south;strokeColor=#64748B;fontColor=#CBD5E1;fontSize=13;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="710" width="410" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="health-inf" value="Health Checks&#xa;API + DB + Redis&#xa;+ Artifact Loader" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#1E293B;gradientDirection=south;strokeColor=#64748B;fontColor=#CBD5E1;fontSize=13;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="710" width="250" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ie1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="user-inf" target="alb-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="alb-inf" target="fastapi-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="fastapi-inf" target="auth-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="auth-inf" target="rds-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="fastapi-inf" target="redis-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="fastapi-inf" target="engine-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="redis-inf" target="engine-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="artifact-inf" target="engine-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="engine-inf" target="response-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#CBD5E1;strokeWidth=1.5;" edge="1" parent="1" source="response-inf" target="user-inf"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1595" y="665" /><mxPoint x="95" y="665" /></Array></mxGeometry></mxCell>
+        <mxCell id="ie11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#94A3B8;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="fastapi-inf" target="obs-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#94A3B8;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="redis-inf" target="obs-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ie13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;flowAnimation=1;strokeColor=#94A3B8;strokeWidth=1.5;dashed=1;" edge="1" parent="1" source="fastapi-inf" target="health-inf"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
