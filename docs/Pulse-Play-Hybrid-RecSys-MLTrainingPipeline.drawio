@@ -1,13 +1,13 @@
 <mxfile host="app.diagrams.net" pages="2">
   <diagram name="ML Training Pipeline" id="Yn-WcftdhUzH3vFvnYTf">
-    <mxGraphModel dx="3617" dy="1013" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="950" background="#0B1120" math="0" shadow="0">
+    <mxGraphModel dx="3850" dy="1152" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="950" background="#0B1120" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="title-train" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#F8FAFC;fontSize=30;fontStyle=1;" value="Pulse Play" vertex="1">
           <mxGeometry height="45" width="280" x="710" y="35" as="geometry" />
         </mxCell>
-        <mxCell id="subtitle-train" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#A7B4C8;fontSize=15;" value="&lt;b&gt;ML Training Pipeline Architecture&lt;/b&gt;" vertex="1">
+        <mxCell id="subtitle-train" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontColor=#A7B4C8;fontSize=15;" value="&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(0, 0, 0));&quot;&gt;&lt;font style=&quot;font-size: 19px;&quot;&gt;&lt;b&gt;ML Training Pipeline Architecture&lt;/b&gt;&lt;/font&gt;&lt;/span&gt;" vertex="1">
           <mxGeometry height="30" width="400" x="650" y="85" as="geometry" />
         </mxCell>
         <mxCell id="lane-train" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#172033;gradientDirection=south;strokeColor=#334155;strokeWidth=1.5;" value="" vertex="1">
@@ -47,7 +47,7 @@
           <mxGeometry height="95" width="195" x="1450" y="380" as="geometry" />
         </mxCell>
         <mxCell id="ecr-train" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" value="AWS ECR&lt;br&gt;Inference Image&lt;br&gt;Ships Artifacts with API using CI/CD" vertex="1">
-          <mxGeometry height="90" width="170" x="1450" y="690" as="geometry" />
+          <mxGeometry height="90" width="170" x="1462.5" y="700" as="geometry" />
         </mxCell>
         <mxCell id="note-train" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#111827;gradientColor=#1E293B;gradientDirection=south;strokeColor=#64748B;fontColor=#CBD5E1;fontSize=13;shadow=1;" value="Important dependency: the hybrid artifact is not trained as a separate standalone model. The collaborative branch first narrows the catalog using user history, then the content transformer is applied to that filtered catalog." vertex="1">
           <mxGeometry height="70" width="640" x="520" y="710" as="geometry" />
@@ -89,7 +89,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="ML Inference Pipeline" id="PEZ_hpgQu6EzUi4tskWw">
-    <mxGraphModel dx="3685" dy="1063" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="950" background="#0B1120" math="0" shadow="0">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1700" pageHeight="950" background="#0B1120" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
