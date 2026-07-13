@@ -3,6 +3,49 @@ Pulse Play Hybrid Music Recommendation System
 
 Creating a Hybrid Music Recommendation System.
 
+Architecture Diagrams
+------------
+
+The project has two architecture views: the offline ML training pipeline and the online ML inference pipeline. The editable diagrams.net source is available at [`docs/pulse-play-architecture.drawio`](docs/pulse-play-architecture.drawio).
+
+### ML Training Pipeline
+
+![ML Training Pipeline](docs/diagrams/Pulse-Play-Hybrid-RecSys-ML%20Training%20Pipeline.drawio.png)
+
+This pipeline is intentionally not a simple straight-line training flow. The content-based and collaborative-filtering branches create different artifacts, and the hybrid stage depends on both of them.
+
+- **Amazon S3 + DVC Remote**: Stores versioned raw datasets and pipeline artifacts outside the Git repository. The repo keeps `.dvc` pointers while the large files live in remote storage.
+- **DVC Pipeline Orchestration**: Defines and reproduces the dependency graph in `dvc.yaml`. It decides which stages need to run when data or code changes.
+- **Raw Data**: Starts from `songs-info.csv` and `user-info.csv`. Song metadata powers content features, while user listening history powers collaborative filtering.
+- **Data Cleaning**: Deduplicates songs, normalizes text fields, handles missing tags, and creates two downstream catalogs: one for content filtering and one for collaborative filtering.
+- **Content Feature Pipeline**: Builds the reusable feature transformer using text tags, categorical features, and audio features. It produces the content feature matrix and the fitted transformer artifact.
+- **Collaborative Pipeline**: Uses user listening history to find tracks with behavioral data, builds the track-user interaction matrix, and creates the filtered collaborative catalog.
+- **Hybrid Feature Alignment**: This is the key dependency. The hybrid matrix is created only after collaborative filtering produces the filtered catalog, then the content transformer is reused on that filtered catalog.
+- **Versioned ML Artifacts**: The final serving artifacts include sparse matrices, the fitted transformer, filtered catalog, interaction matrix, and track indexes.
+- **AWS ECR Image**: The inference container packages the FastAPI service with the generated artifacts so the serving layer can load them at startup.
+
+Interview talking point: the system separates expensive offline artifact generation from fast online inference. The hybrid recommender is not an independent model; it is an artifact alignment step that combines collaborative eligibility with content-based feature representation.
+
+### ML Inference Pipeline
+
+![ML Inference Pipeline](docs/diagrams/Pulse-Play-Hybrid-RecSys-ML%20Inference%20Pipeline.drawio.png)
+
+The inference pipeline serves authenticated recommendation requests and uses precomputed ML artifacts instead of retraining anything at request time.
+
+- **User Browser Dashboard**: The frontend lets users search for a song, choose content/collaborative/hybrid recommendation mode, set recommendation count, and adjust hybrid diversity.
+- **AWS ALB / API Gateway**: Represents the production entry point for routing HTTPS traffic to the API service.
+- **FastAPI Recommender API**: Serves auth pages, dashboard pages, health checks, metrics, and recommendation endpoints. It loads all ML artifacts during application startup.
+- **Auth Layer**: Uses JWT access cookies and refresh-token flow to protect the dashboard and recommendation APIs.
+- **Amazon RDS PostgreSQL**: Stores users and refresh tokens through async SQLAlchemy models.
+- **ElastiCache Redis**: Supports two production-critical paths: recommendation response caching and request rate-limiting counters.
+- **In-memory ML Artifacts**: The API loads content, collaborative, and hybrid matrices once into `app.state`, along with the filtered catalog and track indexes.
+- **Recommendation Engine**: Handles search availability, content similarity, collaborative similarity, and hybrid weighted scoring.
+- **Ranked Recommendations**: Returns song name, artist, and preview URL data to the dashboard.
+- **Observability**: Prometheus metrics track request count, latency, errors, cache hits/misses, inference duration, and result counts. Redis exporter and logs make the service easier to monitor.
+- **Health Checks**: Validate API readiness by checking the database, Redis, and loaded ML artifacts.
+
+Interview talking point: the API is designed like a production recommender service. It uses precomputed artifacts for latency, Redis for performance and abuse protection, PostgreSQL for user/session state, and metrics/health checks for operability.
+
 Project Organization
 ------------
 
