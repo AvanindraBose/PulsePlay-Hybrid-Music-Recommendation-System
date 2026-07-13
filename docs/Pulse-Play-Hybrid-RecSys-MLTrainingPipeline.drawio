@@ -103,7 +103,7 @@
           <mxGeometry height="30" width="140" x="90" y="410" as="geometry" />
         </mxCell>
         <mxCell id="user-inf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" value="User" vertex="1">
-          <mxGeometry height="95" width="145" x="-240" y="387.5" as="geometry" />
+          <mxGeometry height="95" width="145" x="-170" y="382.5" as="geometry" />
         </mxCell>
         <mxCell id="alb-inf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#144E3A;gradientColor=#0F766E;gradientDirection=south;strokeColor=#2DD4BF;fontColor=#ECFEFF;fontSize=13;fontStyle=1;shadow=1;" value="" vertex="1">
           <mxGeometry height="190" width="200" x="210" y="335" as="geometry" />
