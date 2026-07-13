@@ -51,6 +51,143 @@ The inference pipeline serves authenticated recommendation requests and uses pre
 
 Interview talking point: the API is designed like a production recommender service. It uses precomputed artifacts for latency, Redis for performance and abuse protection, PostgreSQL for user/session state, and metrics/health checks for operability.
 
+Quick Setup Guide
+------------
+
+### Prerequisites
+
+- Python 3.11
+- [`uv`](https://docs.astral.sh/uv/) for dependency management
+- Docker and Docker Compose
+- PostgreSQL for the API database
+- Redis for caching, rate limiting, and integration tests
+- AWS credentials only if you need DVC S3 sync, ECR image publishing, or deployment-file upload
+
+### 1. Install dependencies
+
+```bash
+uv sync --extra test --extra pipeline
+```
+
+Use only the API dependencies when you do not need training or tests:
+
+```bash
+uv sync
+```
+
+### 2. Create local environment variables
+
+Create a `.env` file in the project root. A minimal local setup looks like this:
+
+
+### 3. Prepare ML artifacts
+
+The inference API expects the DVC-generated artifacts to exist locally before startup:
+
+```bash
+uv run dvc pull
+uv run dvc repro
+```
+
+If you only need raw data first:
+
+```bash
+uv run dvc pull data/raw/songs-info.csv
+uv run dvc pull data/raw/user-info.csv
+```
+
+The serving image expects these generated files:
+
+- `data/cleaned/songs-info-collab.csv`
+- `data/processed/transformed_content_filtering.npz`
+- `data/processed/track_ids.npy`
+- `data/processed/collab_filtered.csv`
+- `data/processed/interaction_matrix.npz`
+- `data/processed/transformed_hybrid_data.npz`
+
+### 4. Run the API locally
+
+Start PostgreSQL and Redis, then run:
+
+```bash
+uv run python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Useful local URLs:
+
+- Dashboard: `http://localhost:8000/dashboard`
+- Health check: `http://localhost:8000/internal/health`
+- Prometheus metrics: `http://localhost:8000/metrics`
+
+### 5. Run with Docker
+
+The compose file currently references the ECR-hosted API image and starts Redis plus Redis Exporter:
+
+```bash
+docker compose up
+```
+
+To build locally instead of pulling from ECR, build with the lowercase Dockerfile name:
+
+```bash
+docker build -f dockerfile -t pulse-play-api:local .
+```
+
+Then update `docker-compose.yaml` to use `pulse-play-api:local`, or uncomment the local `build` block.
+
+### 6. Run tests
+
+```bash
+uv run pytest tests/api/unit -q
+uv run pytest tests/api/integration -q
+uv run pytest tests/recommendation-engine -q
+```
+
+Integration tests require PostgreSQL and Redis. In CI, GitHub Actions starts both services automatically.
+
+CI/CD Pipeline
+------------
+
+The GitHub Actions workflow is defined in [`.github/workflows/CI-CD.yaml`](.github/workflows/CI-CD.yaml). It runs on pushes and pull requests to `main`.
+
+Pipeline overview:
+
+- **Workflow lint**: validates GitHub Actions syntax with `actionlint`.
+- **Path filtering**: decides whether backend, ML, or container-related jobs need to run.
+- **Model tests**: runs recommendation-engine tests when ML code or artifacts change.
+- **API tests**: starts PostgreSQL and Redis services, then runs API unit and integration tests.
+- **ML pipeline**: on `main`, pulls raw data from DVC remote, runs `dvc repro`, tests model behavior, and uploads generated artifacts.
+- **Post-pipeline API checks**: reruns API tests after DVC artifacts are generated.
+- **ECR image publish**: downloads DVC outputs, creates deployment `.env`, builds the Docker image, and pushes both SHA and `latest` tags to AWS ECR.
+- **DVC artifact push**: pushes updated DVC artifacts back to the configured remote after successful checks and image publish.
+
+Required GitHub secrets:
+
+- `AWS_DVC_ACCESS_KEY_ID`
+- `AWS_DVC_SECRET_ACCESS_KEY`
+- `AWS_DOCKER_ACCESS_KEY_ID`
+- `AWS_DOCKER_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `ECR_REGISTRY`
+- `ECR_REPOSITORY`
+- `DEPLOYMENT_S3_BUCKET`
+- `JWT_ACCESS_SECRET_KEY`
+- `JWT_REFRESH_SECRET_KEY`
+- `AWS_REDIS_URL`
+- `AWS_REDIS_ADDR`
+- `AWS_RDS_URL`
+- `LOGIN_RATE_LIMIT`
+- `LOGIN_RATE_WINDOW`
+- `REFRESH_RATE_LIMIT`
+- `REFRESH_RATE_WINDOW`
+- `PREDICT_RATE_LIMIT`
+- `PREDICT_RATE_WINDOW`
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `REFRESH_TOKEN_EXPIRE_DAYS`
+- `REDIS_TTL`
+
+Deployment note: CI/CD builds and pushes the ECR image and uploads deployment files, but the current production rollout is still manual on EC2 instances in the ASG behind the ALB. CodeDeploy would be the next step for automated rolling or blue/green deployment.
+
 Project Organization
 ------------
 
