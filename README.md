@@ -6,7 +6,12 @@ Creating a Hybrid Music Recommendation System.
 Architecture Diagrams
 ------------
 
-The project has two architecture views: the offline ML training pipeline and the online ML inference pipeline. The editable diagrams.net source is available at [`docs/pulse-play-architecture.drawio`](docs/pulse-play-architecture.drawio).
+The project has two architecture views: the offline ML training pipeline and the online ML inference pipeline. The exported architecture diagrams are available in [`docs/diagrams`](docs/diagrams):
+
+- [`Pulse-Play-Hybrid-RecSys-ML Training Pipeline.drawio.png`](docs/diagrams/Pulse-Play-Hybrid-RecSys-ML%20Training%20Pipeline.drawio.png)
+- [`Pulse-Play-Hybrid-RecSys-ML Inference Pipeline.drawio.png`](docs/diagrams/Pulse-Play-Hybrid-RecSys-ML%20Inference%20Pipeline.drawio.png)
+
+Editable diagrams.net sources are available at [`docs/pulse-play-architecture.drawio`](docs/pulse-play-architecture.drawio) and [`docs/Pulse-Play-Hybrid-RecSys-MLTrainingPipeline.drawio`](docs/Pulse-Play-Hybrid-RecSys-MLTrainingPipeline.drawio).
 
 ### ML Training Pipeline
 
