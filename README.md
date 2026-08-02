@@ -3,6 +3,11 @@ Pulse Play Hybrid Music Recommendation System
 
 Creating a Hybrid Music Recommendation System.
 
+Project Demo
+------------
+
+Watch the project demo on YouTube: [https://www.youtube.com/watch?v=Qm5l_zo3nQs](https://www.youtube.com/watch?v=Qm5l_zo3nQs)
+
 Architecture Diagrams
 ------------
 
